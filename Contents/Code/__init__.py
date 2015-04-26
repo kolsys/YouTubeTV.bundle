@@ -55,6 +55,7 @@ Plugin.AddViewGroup(
     summary=SummaryTextType.Long
 )
 
+
 def Start():
     HTTP.CacheTime = CACHE_1HOUR
 
@@ -65,13 +66,11 @@ def Start():
 
 @handler(PREFIX, TITLE, thumb=ICON)
 def MainMenu(complete=False):
-    # if not CheckToken():
-    #     return GrantPermissionsMessage()
 
     oc = ObjectContainer(title2=TITLE, no_cache=True, replace_parent=False)
     if not CheckToken():
         oc.add(DirectoryObject(
-            key=Callback(GrantPermissions),
+            key=Callback(Authorization),
             title=u'%s' % L('Authorize'),
         ))
         if complete:
@@ -80,7 +79,7 @@ def MainMenu(complete=False):
         return oc
 
     oc.add(DirectoryObject(
-        key=Callback(NotImplemented),
+        key=Callback(MySubscriptions),
         title=u'%s' % L('My Subscriptions')
     ))
     oc.add(DirectoryObject(
@@ -107,7 +106,6 @@ def MainMenu(complete=False):
         key=Callback(NotImplemented),
         title=u'%s' % L('Liked videos')
     ))
-
     oc.add(InputDirectoryObject(
         key=Callback(
             Search,
@@ -117,6 +115,71 @@ def MainMenu(complete=False):
         title=u'%s' % L('Search'), prompt=u'%s' % L('Search Video')
     ))
 
+    return AddSubscriptions(oc)
+
+
+@route(PREFIX + '/my/subscriptions')
+def MySubscriptions():
+    return NotImplemented()
+
+
+@route(PREFIX + '/channel')
+def Channel(id, title):
+    return NotImplemented()
+
+
+@route(PREFIX + '/subscriptions')
+def Subscriptions(offset=None):
+    oc = ObjectContainer(
+        title2=u'%s' % L('Subscriptions'),
+        replace_parent=bool(offset)
+    )
+    return AddSubscriptions(oc, offset, YT_LIMIT)
+
+
+def AddSubscriptions(oc, offset=None, limit=5):
+    res = ApiRequest('subscriptions', {
+        'part': 'snippet',
+        'mine': 'true',
+        'maxResults': limit,
+        'order': 'relevance',
+        'pageToken': offset if offset else '',
+    })
+
+    if res:
+        if 'items' in res:
+            for item in res['items']:
+                item = item['snippet']
+                title = u'%s' % item['title']
+                try:
+                    thumb = item['thumbnails']['high']['url']
+                except:
+                    thumb = ''
+
+                oc.add(DirectoryObject(
+                    key=Callback(
+                        Channel,
+                        id=item['resourceId']['channelId'],
+                        title=title
+                    ),
+                    title=title,
+                    summary=u'%s' % item['description'],
+                    thumb=thumb,
+                ))
+
+
+        if 'nextPageToken' in res:
+            oc.add(NextPageObject(
+                key=Callback(
+                    Subscriptions,
+                    offset=res['nextPageToken'],
+                ),
+                title=u'%s' % L('More subscriptions')
+            ))
+
+    if not len(oc):
+        return NoContents()
+
     return oc
 
 
@@ -124,11 +187,8 @@ def Search(query, title=u'%s' % L('Search'), offset=0):
     return NotImplemented()
 
 
-###############################################################################
-# Common
-###############################################################################
-
-def GrantPermissions():
+@route(PREFIX + '/authorization')
+def Authorization():
 
     code = None
     if CheckAccessData('device_code'):
@@ -168,6 +228,10 @@ def GrantPermissions():
     )
 
 
+###############################################################################
+# Common
+###############################################################################
+
 def NoContents():
     return ObjectContainer(
         header=u'%s' % L('Error'),
@@ -183,7 +247,21 @@ def NotImplemented(**kwargs):
 
 
 def ApiRequest(method, params):
-    return False
+    params['access_token'] = Dict['access_token']
+    try:
+        res = JSON.ObjectFromURL(
+            'https://www.googleapis.com/youtube/%s/%s?%s' % (
+                YT_VERSION,
+                method,
+                urlencode(params)
+            )
+        )
+        if 'error' in res:
+            return None
+    except:
+        return None
+
+    return res
 
 
 def CheckToken():
