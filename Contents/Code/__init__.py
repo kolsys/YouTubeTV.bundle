@@ -28,6 +28,8 @@
 from urllib import urlencode
 from time import time
 
+GetVideoObject = SharedCodeService.video.GetVideoObject
+
 PREFIX = '/video/youtubetv'
 
 ART = 'art-default.jpg'
@@ -119,8 +121,75 @@ def MainMenu(complete=False):
 
 
 @route(PREFIX + '/my/subscriptions')
-def MySubscriptions():
-    return NotImplemented()
+def MySubscriptions(offset=None):
+    if not CheckToken():
+        return NoContents()
+
+    params = {
+        'access_token': Dict['access_token'],
+        'ajax': 1,
+    }
+    if offset:
+        params.update(JSON.ObjectFromString(offset))
+
+    path = 'feed' if offset else 'feed/subscriptions'
+
+    try:
+        res = JSON.ObjectFromString(HTTP.Request(
+            'https://m.youtube.com/%s?%s' % (path, urlencode(params)),
+            headers={
+                'User-Agent': (
+                    'Mozilla/5.0 (iPad; CPU OS 7_0_4 like Mac OS X) '
+                    'AppleWebKit/537.51.1 (KHTML, like Gecko) Version/7.0 '
+                    'Mobile/11B554a Safari/9537.54'
+                )
+            }
+        ).content[4:])['content']
+    except:
+        return NoContents()
+
+    if 'single_column_browse_results' in res:
+        res = res['single_column_browse_results']['tabs'][0]['content']
+    else:
+        res = res['continuation_contents']
+
+    if not len(res['contents']):
+        return NoContents()
+
+    if 'continuations' in res:
+        offset = JSON.StringFromObject({
+            'itct': res['continuations'][0]['click_tracking_params'],
+            'ctoken': res['continuations'][0]['continuation'],
+        })
+    else:
+        offset = None
+
+    oc = ObjectContainer(title2=L('My subscriptions'))
+    for item in res['contents']:
+        info = item['contents'][0]['content']['items'][0]
+        oc.add(GetVideoObject(
+            info['encrypted_id'],
+            Callback(VideoView, url=info['encrypted_id'])
+        ))
+
+    if offset:
+        oc.add(NextPageObject(
+            key=Callback(
+                MySubscriptions,
+                offset=offset,
+            ),
+            title=u'%s' % L('Next page')
+        ))
+
+    return oc
+
+
+@route(PREFIX + '/video')
+def VideoView(url):
+    return ObjectContainer(
+        objects=[GetVideoObject(url)],
+        content=ContainerContent.GenericVideos
+    )
 
 
 @route(PREFIX + '/channel')
@@ -247,6 +316,9 @@ def NotImplemented(**kwargs):
 
 
 def ApiRequest(method, params):
+    if not CheckToken():
+        return None
+
     params['access_token'] = Dict['access_token']
     try:
         res = JSON.ObjectFromURL(

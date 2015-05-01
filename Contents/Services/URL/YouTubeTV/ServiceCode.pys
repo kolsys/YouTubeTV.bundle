@@ -1,0 +1,128 @@
+# -*- coding: utf-8 -*-
+
+# Copyright (c) 2014, KOL
+# All rights reserved.
+
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the name of the <organization> nor the
+#       names of its contributors may be used to endorse or promote products
+#       derived from this software without specific prior written permission.
+
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
+# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+import video as Video
+
+
+############################################################################
+def NormalizeURL(url):
+    ''' This modified version from Services.bundle '''
+
+    if 'm.youtube.com' in url and 'ajax=1' in url:
+        return url
+
+    video_id = None
+
+    if isinstance(url, basestring):
+        url = urlparse(url)
+
+    domain = url.netloc
+
+    # Edit mobile urls
+    if domain.startswith('m.'):
+        # Rewrite mobile urls that contain a hash
+        if url.fragment != '':
+            url = urlparse('https://www.youtube.com%s' % url.fragment)
+
+    # http://www.youtube.com/?v=lgTssWW2Qw4&feature=player_embedded
+    # http://www.youtube.com/watch?v=lgTssWW2Qw4&feature=player_embedded
+    # http://www.youtube.com/details?v=pjyfMCTAqKU
+    if url.path == '/' or RE_PATH_1.match(url.path):
+        qs = String.ParseQueryString(url.query)
+    if 'v' in qs:
+        video_id = qs['v'][0][0:11]
+
+    # http://youtu.be/vXhmyyXFd5I
+    elif domain == 'youtu.be':
+        video_id = url.path[1:12]
+
+    # http://www.youtube.com/user/andyverg#p/a/u/0/HTGOoQNYGL4
+    elif (url.path[0:6] == '/user/' or RE_PATH_2.match(url.path)) and url.fragment != '':
+        video_id = url.fragment.split('/')[-1]
+
+    # http://www.youtube.com/user/fujitvlive?feature=lb&v=eYpAUMZLXqo
+    elif url.path[0:6] == '/user/' and "v=" in url.query:
+        qs = String.ParseQueryString(url.query)
+    if 'v' in qs:
+        video_id = qs['v'][0][0:11]
+
+    # http://www.youtube.com/v/taaSlWjKdDY
+    # http://www.youtube.com/e/NO00y65njH0
+    # http://www.youtube.com/embed/nd5WGLWNllA
+    elif url.path[0:3] == '/v/' or url.path[0:3] == '/e/' or url.path[0:7] == '/embed/':
+        video_id = RE_VID_ID.search(url.path).group('id')
+
+    # http://www.youtube.com/my_subscriptions?pid=nCgQDjiotG0&show_edit=1&feature=uploadeemail_edit
+    elif url.path[0:17] == '/my_subscriptions' and url.query != '':
+        video_id = RE_VID_PID.findall(url.query)[0]
+
+    # http://www.youtube.com/movie/the-last-man-on-earth
+    elif url.path[0:7] == '/movie/':
+        url = HTML.ElementFromURL(url.geturl()).xpath(
+            '//a[contains(@href, "watch-now-button")]'
+        )
+
+    if url:
+        url = urlparse(url[0].get('href'))
+        qs = String.ParseQueryString(url.query)
+
+        if 'v' in qs:
+            video_id = qs['v'][0][0:11]
+
+    if video_id is None:
+        page = HTTP.Request(url.geturl()).content
+        id = HTML.ElementFromString(page).xpath(
+            '//div[@data-video-id]/@data-video-id'
+        )
+
+    if id:
+        video_id = id[0]
+    else:
+        id = RE_VIDEO_ID.search(page)
+
+        if id:
+            video_id = id.group(1)
+        else:
+            return None
+
+    return 'https://m.youtube.com/watch?ajax=1&v=%s' % video_id
+
+
+############################################################################
+def MetadataObjectForURL(url):
+    return Video.GetVideoObject(url, False)
+
+
+############################################################################
+def MediaObjectsForURL(url):
+    return Video.GetMediaObjects(url)
+
+
+############################################################################
+@indirect
+def PlayVideo(url):
+    return Video.PlayVideo(url)
