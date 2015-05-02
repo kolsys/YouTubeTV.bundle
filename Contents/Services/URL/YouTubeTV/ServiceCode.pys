@@ -25,7 +25,14 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from urlparse import urlparse
 import video as Video
+
+RE_PATH_1 = Regex('^/(watch|details)(_popup)?')
+RE_PATH_2 = Regex('^/[^/]+$')
+RE_VID_ID = Regex('/(v|e(mbed)?)/(v/)?(?P<id>.{11})')
+RE_VID_PID = Regex('pid=(.{11})')
+RE_VIDEO_ID = Regex('"video_id":\s"([^"]+)')
 
 
 ############################################################################
@@ -41,6 +48,9 @@ def NormalizeURL(url):
         url = urlparse(url)
 
     domain = url.netloc
+
+    if domain == 'tv.youtube.plugins.plex.com':
+        return Video.GetUrlByVideoId(url.path[1:])
 
     # Edit mobile urls
     if domain.startswith('m.'):
@@ -85,13 +95,12 @@ def NormalizeURL(url):
         url = HTML.ElementFromURL(url.geturl()).xpath(
             '//a[contains(@href, "watch-now-button")]'
         )
+        if url:
+            url = urlparse(url[0].get('href'))
+            qs = String.ParseQueryString(url.query)
 
-    if url:
-        url = urlparse(url[0].get('href'))
-        qs = String.ParseQueryString(url.query)
-
-        if 'v' in qs:
-            video_id = qs['v'][0][0:11]
+            if 'v' in qs:
+                video_id = qs['v'][0][0:11]
 
     if video_id is None:
         page = HTTP.Request(url.geturl()).content
@@ -99,30 +108,43 @@ def NormalizeURL(url):
             '//div[@data-video-id]/@data-video-id'
         )
 
-    if id:
-        video_id = id[0]
-    else:
-        id = RE_VIDEO_ID.search(page)
-
         if id:
-            video_id = id.group(1)
+            video_id = id[0]
         else:
-            return None
+            id = RE_VIDEO_ID.search(page)
 
-    return 'https://m.youtube.com/watch?ajax=1&v=%s' % video_id
+            if id:
+                video_id = id.group(1)
+            else:
+                return None
+
+    return Video.GetUrlByVideoId(video_id)
 
 
-############################################################################
 def MetadataObjectForURL(url):
-    return Video.GetVideoObject(url, False)
+    item = Video.GetVideoData(url)
+    if not item:
+        raise Ex.MediaNotAvailable
+
+    return VideoClipObject(
+        title=u'%s' % item['video']['title'],
+        summary=u'%s' % item['video']['description'],
+        thumb=item['video']['thumbnail_for_watch'],
+        rating=(float(item['swfcfg']['args']['avg_rating'])*2),
+        tags=item['swfcfg']['args']['keywords'].split(','),
+        # TODO
+        # originally_available_at=Datetime.ParseDate(
+        #     item['video']['time_created_text'],
+        #     '%b %d, %Y'
+        # ).date(),
+        duration=(item['video']['length_seconds']*1000),
+    )
 
 
-############################################################################
 def MediaObjectsForURL(url):
-    return Video.GetMediaObjects(url)
+    return Video.GetMediaObjects(url=url, play_callback=PlayVideo)
 
 
-############################################################################
 @indirect
-def PlayVideo(url):
-    return Video.PlayVideo(url)
+def PlayVideo(url, fmt):
+    return Video.PlayVideo(url, fmt)

@@ -26,6 +26,21 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+definitions = {
+    'sd': (36, 18),
+    'hd': (22, 18, 36),
+}
+resolutions = {
+    22: 720,
+    18: 360,
+    36: 240,
+}
+
+
+def GetUrlByVideoId(video_id):
+    return 'https://m.youtube.com/watch?ajax=1&v=%s' % video_id
+
+
 def GetVideoData(url):
     # make url for simple video_id
     if 'm.youtube.com' not in url:
@@ -48,27 +63,21 @@ def GetVideoData(url):
     return res
 
 
-def GetVideoUrls(info):
+def GetVideoUrls(url):
     try:
-        info = info['swfcfg']['args']
+        info = GetVideoData(
+            url
+        )['swfcfg']['args']['url_encoded_fmt_stream_map']
     except:
         raise Ex.MediaNotAvailable
 
-    fmt_meta = info['url_encoded_fmt_stream_map'].split(',')
-    fmt_list = info['fmt_list'].split(',')
+    fmt_meta = info.split(',')
 
     ret = {}
     for item in fmt_meta:
         item = String.ParseQueryString(item)
         for val in item:
-            ret[item['itag'][0]] = {
-                'url': item['url'][0],
-                'resolution': 0,
-            }
-
-    for item in fmt_list:
-        item = item.split('/')
-        ret[item[0]]['resolution'] = item[1].split('x')[1]
+            ret[item['itag'][0]] = item['url'][0]
 
     if not len(ret):
         raise Ex.MediaNotAvailable
@@ -76,57 +85,26 @@ def GetVideoUrls(info):
     return ret
 
 
-def GetVideoObject(url, callback=True):
-    item = GetVideoData(url)
-    if not item:
-        raise Ex.MediaNotAvailable
-
-    vco = VideoClipObject(
-        title=u'%s' % item['video']['title'],
-        summary=u'%s' % item['video']['description'],
-        thumb=item['video']['thumbnail_for_watch'],
-        rating=(float(item['swfcfg']['args']['avg_rating'])*2),
-        tags=item['swfcfg']['args']['keywords'].split(','),
-        # TODO
-        # originally_available_at=Datetime.ParseDate(
-        #     item['video']['time_created_text'],
-        #     '%b %d, %Y'
-        # ).date(),
-        duration=(item['video']['length_seconds']*1000),
-    )
-    if callback:
-        vco.key = callback
-        vco.rating_key = url
-        vco.items = GetMediaObjectsFromData(item)
-
-    return vco
-
-
-def GetMediaObjects(url):
-    return GetMediaObjectsFromData(GetVideoData(url))
-
-
-def GetMediaObjectsFromData(info):
-    info = GetVideoUrls(info)
+def GetMediaObjects(url, play_callback, definition='hd'):
     return [
         MediaObject(
             parts=[
-                PartObject(key=Callback(PlayVideo, url=item['url']))
+                PartObject(key=Callback(play_callback, url=url, fmt=key))
             ],
-            video_resolution=item['resolution'],
+            video_resolution=resolutions[key],
             audio_channels=2,
             container='mp4',
             video_codec=VideoCodec.H264,
             audio_codec=AudioCodec.AAC,
             optimized_for_streaming=True
-        ) for item in sorted(
-            info.values(),
-            key=lambda k: k['resolution'],
-            reverse=True
-        )
+        ) for key in definitions[definition]
     ]
 
 
-@indirect
-def PlayVideo(url):
-    return IndirectResponse(VideoClipObject, key=url)
+def PlayVideo(url, fmt):
+    info = GetVideoUrls(url)
+    fmt = int(fmt)
+    if fmt not in info:
+        fmt = info.keys()[0]
+
+    return IndirectResponse(VideoClipObject, key=info[fmt])
