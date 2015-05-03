@@ -25,6 +25,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from datetime import timedelta
 
 definitions = {
     'sd': (36, 18),
@@ -108,3 +109,127 @@ def PlayVideo(url, fmt):
         fmt = info.keys()[0]
 
     return IndirectResponse(VideoClipObject, key=info[fmt])
+
+
+def ParseDuration(durationstr):
+    '''
+    Original on https://bitbucket.org/nielsenb/aniso8601
+    '''
+
+    def parse_duration_element(durationstr, elementstr):
+        #Extracts the specified portion of a duration, for instance, given:
+        #durationstr = 'T4H5M6.1234S'
+        #elementstr = 'H'
+        #
+        #returns 4
+        #
+        #Note that the string must start with a character, so its assumed the
+        #full duration string would be split at the 'T'
+
+        durationstartindex = 0
+        durationendindex = durationstr.find(elementstr)
+
+        for characterindex in xrange(durationendindex - 1, 0, -1):
+            if durationstr[characterindex].isalpha() == True:
+                durationstartindex = characterindex
+                break
+
+        durationstartindex += 1
+
+        if ',' in durationstr:
+            #Replace the comma with a 'full-stop'
+            durationstr = durationstr.replace(',', '.')
+
+        return float(durationstr[durationstartindex:durationendindex])
+    #durationstr can be of the form PnYnMnDTnHnMnS or PnW
+
+    #Make sure only the lowest order element has decimal precision
+    if durationstr.count('.') > 1:
+        raise ValueError('String is not a valid ISO8601 duration.')
+    elif durationstr.count('.') == 1:
+        #There should only ever be 1 letter after a decimal if there is more
+        #then one, the string is invalid
+        lettercount = 0;
+
+        for character in durationstr.split('.')[1]:
+            if character.isalpha() == True:
+                lettercount += 1
+
+            if lettercount > 1:
+                raise ValueError('String is not a valid ISO8601 duration.')
+
+    #Parse the elements of the duration
+    if durationstr.find('T') == -1:
+        if durationstr.find('Y') != -1:
+            years = parse_duration_element(durationstr, 'Y')
+        else:
+            years = 0
+
+        if durationstr.find('M') != -1:
+            months = parse_duration_element(durationstr, 'M')
+        else:
+            months = 0
+
+        if durationstr.find('W') != -1:
+            weeks = parse_duration_element(durationstr, 'W')
+        else:
+            weeks = 0
+
+        if durationstr.find('D') != -1:
+            days = parse_duration_element(durationstr, 'D')
+        else:
+            days = 0
+
+        #No hours, minutes or seconds
+        hours = 0
+        minutes = 0
+        seconds = 0
+    else:
+        firsthalf = durationstr[:durationstr.find('T')]
+        secondhalf = durationstr[durationstr.find('T'):]
+
+        if  firsthalf.find('Y') != -1:
+            years = parse_duration_element(firsthalf, 'Y')
+        else:
+            years = 0
+
+        if firsthalf.find('M') != -1:
+            months = parse_duration_element(firsthalf, 'M')
+        else:
+            months = 0
+
+        if durationstr.find('W') != -1:
+            weeks = parse_duration_element(durationstr, 'W')
+        else:
+            weeks = 0
+
+        if firsthalf.find('D') != -1:
+            days = parse_duration_element(firsthalf, 'D')
+        else:
+            days = 0
+
+        if secondhalf.find('H') != -1:
+            hours = parse_duration_element(secondhalf, 'H')
+        else:
+            hours = 0
+
+        if secondhalf.find('M') != -1:
+            minutes = parse_duration_element(secondhalf, 'M')
+        else:
+            minutes = 0
+
+        if secondhalf.find('S') != -1:
+            seconds = parse_duration_element(secondhalf, 'S')
+        else:
+            seconds = 0
+
+    #Note that weeks can be handled without conversion to days
+    totaldays = years * 365 + months * 30 + days
+
+    return int(timedelta(
+        weeks=weeks,
+        days=totaldays,
+        hours=hours,
+        minutes=minutes,
+        seconds=seconds
+    ).total_seconds())

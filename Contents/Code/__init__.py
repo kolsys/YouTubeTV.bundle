@@ -285,8 +285,6 @@ def Playlist(pid, title, offset=None):
         limit=Prefs['items_per_page']
     ))
 
-    Log.Debug(res)
-
     if not res or not len(res['items']):
         return NoContents()
 
@@ -343,10 +341,11 @@ def AddVideos(oc, ids=[], **kwargs):
             title=u'%s' % snippet['title'],
             summary=u'%s' % snippet['description'],
             thumb=snippet['thumbnails']['high']['url'],
-            # TODO parse duration from item['contentDetails']['duration']
-            # duration=
+            duration=(Video.ParseDuration(
+                item['contentDetails']['duration']
+            )*1000),
             originally_available_at=Datetime.ParseDate(
-                snippet['publishedAt'],
+                snippet['publishedAt']
             ).date(),
             items=Video.GetMediaObjects(
                 url=Video.GetUrlByVideoId(item['id']),
@@ -631,8 +630,6 @@ def OAuthRequest(params, rtype='token'):
     if rtype == 'token':
         params['client_secret'] = YT_SECRET
 
-    Log.Debug(urlencode(params))
-
     try:
         res = JSON.ObjectFromURL(
             'https://accounts.google.com/o/oauth2/' + rtype,
@@ -652,7 +649,6 @@ def CheckAccessData(key):
 
 
 def StoreAccessData(data):
-    Log.Debug(data)
     if 'expires_in' in data:
         data['expires'] = int(time()) + int(data['expires_in'])
 
