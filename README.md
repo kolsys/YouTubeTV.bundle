@@ -7,11 +7,20 @@ This is fast and easy alternative [YouTube](http://youtube.com/) plugin for [Ple
 Current status
 -------
 
-* Full YouTube API v3 support
 * Support categories
 * Support subscriptions
-* Support playlist
+* Support playlists
+* Support channels catalogue and video categories browsing
+* Search playlists, channels and videos
 
+Features
+-------
+
+* Much faster than original Plex YouTube plugin
+* Full YouTube API v3 support
+* Does not required Google login and password
+* Navigation like YouTube Apps
+* Pagination and regional setting
 
 Installation
 -------

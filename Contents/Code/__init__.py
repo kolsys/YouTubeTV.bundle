@@ -92,18 +92,22 @@ def MainMenu(complete=False):
         title=u'%s' % L('Playlists')
     ))
     oc.add(DirectoryObject(
-        key=Callback(Categories),
+        key=Callback(Categories, title=L('Categories'), c_type='video'),
         title=u'%s' % L('Categories')
     ))
     oc.add(DirectoryObject(
-        key=Callback(Channel, uid='me', title=L('My channel')),
+        key=Callback(Categories, title=L('Browse channels'), c_type='guide'),
+        title=u'%s' % L('Browse channels')
+    ))
+    oc.add(DirectoryObject(
+        key=Callback(Channel, oid='me', title=L('My channel')),
         title=u'%s' % L('My channel')
     ))
     AddSystemPlaylists(oc, 'me', ('watchHistory', 'likes'))
     oc.add(InputDirectoryObject(
         key=Callback(
             Search,
-            search_type='video',
+            s_type='video',
             title=u'%s' % L('Search Video')
         ),
         title=u'%s' % L('Search'), prompt=u'%s' % L('Search Video')
@@ -191,34 +195,82 @@ def VideoInfo(url):
     return NotImplemented()
 
 
+@route(PREFIX + '/channels')
+def Channels(oid, title, offset=None):
+    res = ApiRequest(
+        'channels',
+        ApiGetParams(
+            categoryId=oid,
+            limit=Prefs['items_per_page'],
+            offset=offset
+        )
+    )
+
+    if not res or not len(res['items']):
+        return NoContents()
+
+    oc = ObjectContainer(
+        title2=u'%s' % title,
+        replace_parent=bool(offset)
+    )
+
+    for item in res['items']:
+        oid = item['id']
+        item = item['snippet']
+
+        oc.add(DirectoryObject(
+            key=Callback(
+                Channel,
+                oid=oid,
+                title=item['title']
+            ),
+            title=u'%s' % item['title'],
+            summary=u'%s' % item['description'],
+            thumb=GetThumbFromSnippet(item),
+        ))
+
+    if 'nextPageToken' in res:
+        oc.add(NextPageObject(
+            key=Callback(
+                Channels,
+                oid=oid,
+                title=title,
+                offset=res['nextPageToken'],
+            ),
+            title=u'%s' % L('Next page')
+        ))
+
+    return oc
+
+
 @route(PREFIX + '/channel')
-def Channel(uid, title):
+def Channel(oid, title):
     oc = ObjectContainer(
         title2=u'%s' % title
     )
 
     # Add standart menu
-    AddSystemPlaylists(oc, uid)
-    if uid == 'me':
+    AddSystemPlaylists(oc, oid)
+    if oid == 'me':
         return oc
 
     oc.add(DirectoryObject(
         key=Callback(
             Subscriptions,
-            title=u'%s - %s' % (title, L('Channels')),
-            uid=uid
+            title=u'%s - %s' % (title, L('Subscriptions')),
+            uid=oid
         ),
-        title=u'%s' % L('Channels')
+        title=u'%s' % L('Subscriptions')
     ))
-    AddPlaylists(oc, uid=uid)
+    AddPlaylists(oc, uid=oid)
 
     return oc
 
 
 @route(PREFIX + '/categories')
-def Categories():
+def Categories(title, c_type):
     res = ApiRequest(
-        'videoCategories',
+        '%sCategories' % c_type,
         {'part': 'snippet', 'regionCode': GetRegion()}
     )
 
@@ -226,14 +278,28 @@ def Categories():
         return NoContents()
 
     oc = ObjectContainer(
-        title2=u'%s' % L('Categories')
+        title2=u'%s' % title
     )
+
+    if c_type == 'guide':
+        c_callback = Channels
+        oc.add(InputDirectoryObject(
+            key=Callback(
+                Search,
+                s_type='channel',
+                title=u'%s' % L('Search channels')
+            ),
+            title=u'%s' % L('Search'), prompt=u'%s' % L('Search channels')
+        ))
+    else:
+        c_callback = Category
+
     for item in res['items']:
         oc.add(DirectoryObject(
             key=Callback(
-                Category,
+                c_callback,
                 title=item['snippet']['title'],
-                cid=item['id']
+                oid=item['id']
             ),
             title=u'%s' % item['snippet']['title']
         ))
@@ -242,7 +308,7 @@ def Categories():
 
 
 @route(PREFIX + '/category')
-def Category(title, cid=0, offset=None):
+def Category(title, oid=0, offset=None):
     oc = ObjectContainer(
         title2=u'%s' % title,
         replace_parent=bool(offset)
@@ -253,7 +319,7 @@ def Category(title, cid=0, offset=None):
         limit=Prefs['items_per_page'],
         offset=offset,
         regionCode=GetRegion(),
-        videoCategoryId=cid,
+        videoCategoryId=oid,
     )
 
     if not len(oc):
@@ -271,15 +337,24 @@ def Playlists(uid, title, offset=None):
 
     if not offset and uid == 'me':
         AddSystemPlaylists(oc, uid, ('watchLater', 'likes', 'favorites'))
+        oc.add(InputDirectoryObject(
+            key=Callback(
+                Search,
+                s_type='playlist',
+                title=u'%s' % L('Search playlists')
+            ),
+            title=u'%s' % L('Search'), prompt=u'%s' % L('Search playlists')
+        ))
+
 
     return AddPlaylists(oc, uid=uid, offset=offset)
 
 
 @route(PREFIX + '/playlist')
-def Playlist(pid, title, offset=None):
+def Playlist(oid, title, offset=None):
     res = ApiRequest('playlistItems', ApiGetParams(
         part='contentDetails',
-        playlistId=pid,
+        playlistId=oid,
         offset=offset,
         limit=Prefs['items_per_page']
     ))
@@ -303,7 +378,7 @@ def Playlist(pid, title, offset=None):
             key=Callback(
                 Playlist,
                 title=oc.title2,
-                pid=pid,
+                oid=oid,
                 offset=res['nextPageToken'],
             ),
             title=u'%s' % L('Nex page')
@@ -339,7 +414,7 @@ def AddVideos(oc, ids=[], **kwargs):
             rating_key=url,
             title=u'%s' % snippet['title'],
             summary=u'%s' % snippet['description'],
-            thumb=snippet['thumbnails']['high']['url'],
+            thumb=GetThumbFromSnippet(snippet),
             duration=(Video.ParseDuration(
                 item['contentDetails']['duration']
             )*1000),
@@ -353,12 +428,12 @@ def AddVideos(oc, ids=[], **kwargs):
             )
         ))
 
-    if not ids and 'nextPageToken' in res:
+    if 'nextPageToken' in res and 'videoCategoryId' in kwargs:
         oc.add(NextPageObject(
             key=Callback(
                 Category,
                 title=oc.title2,
-                cid=kwargs['videoCategoryId'] if 'videoCategoryId' in kwargs else '0',
+                oid=kwargs['videoCategoryId'],
                 offset=res['nextPageToken'],
             ),
             title=u'%s' % L('More playlists')
@@ -390,7 +465,7 @@ def AddSystemPlaylists(oc, uid, types=None):
             oc.add(DirectoryObject(
                 key=Callback(
                     Playlist,
-                    pid=items[key],
+                    oid=items[key],
                     title=L(key)
                 ),
                 title=L(key),
@@ -409,23 +484,18 @@ def AddPlaylists(oc, uid, offset=None):
     if res:
         if 'items' in res:
             for item in res['items']:
-                pid = item['id']
+                oid = item['id']
                 item = item['snippet']
-                title = u'%s' % item['title']
-                try:
-                    thumb = item['thumbnails']['high']['url']
-                except:
-                    thumb = ''
 
                 oc.add(DirectoryObject(
                     key=Callback(
                         Playlist,
-                        pid=pid,
-                        title=title
+                        oid=oid,
+                        title=item['title']
                     ),
-                    title=title,
+                    title=u'%s' % item['title'],
                     summary=u'%s' % item['description'],
-                    thumb=thumb,
+                    thumb=GetThumbFromSnippet(item),
                 ))
 
         if 'nextPageToken' in res:
@@ -456,21 +526,15 @@ def AddSubscriptions(oc, uid, offset=None):
         if 'items' in res:
             for item in res['items']:
                 item = item['snippet']
-                title = u'%s' % item['title']
-                try:
-                    thumb = item['thumbnails']['high']['url']
-                except:
-                    thumb = ''
-
                 oc.add(DirectoryObject(
                     key=Callback(
                         Channel,
-                        uid=item['resourceId']['channelId'],
-                        title=title
+                        oid=item['resourceId']['channelId'],
+                        title=item['title']
                     ),
-                    title=title,
+                    title=u'%s' % item['title'],
                     summary=u'%s' % item['description'],
-                    thumb=thumb,
+                    thumb=GetThumbFromSnippet(item),
                 ))
 
 
@@ -491,8 +555,63 @@ def AddSubscriptions(oc, uid, offset=None):
     return oc
 
 
-def Search(query, title=u'%s' % L('Search'), offset=0):
-    return NotImplemented()
+def Search(query, title=L('Search'), s_type='video', offset=0):
+    is_video = s_type == 'video'
+    res = ApiRequest('search', ApiGetParams(
+        part='id' if is_video else 'snippet',
+        q=query,
+        type=s_type,
+        regionCode=GetRegion(),
+        videoDefinition='high' if is_video and Prefs['search_hd'] else '',
+        offset=offset,
+        limit=Prefs['items_per_page']
+    ))
+
+    if not res or not len(res['items']):
+        return NoContents()
+
+    oc = ObjectContainer(
+        title2=u'%s' % title,
+        replace_parent=bool(offset)
+    )
+
+    if is_video:
+        ids = []
+        for item in res['items']:
+            ids.append(item['id']['videoId'])
+
+        AddVideos(oc, ids=ids)
+    else:
+        s_callback = Channel if s_type == 'channel' else Playlist
+        s_key = s_type+'Id'
+
+        for item in res['items']:
+            oid = item['id'][s_key]
+            item = item['snippet']
+            oc.add(DirectoryObject(
+                key=Callback(
+                    s_callback,
+                    title=item['title'],
+                    oid=oid
+                ),
+                title=u'%s' % item['title'],
+                summary=u'%s' % item['description'],
+                thumb=GetThumbFromSnippet(item),
+            ))
+
+    if 'nextPageToken' in res:
+        oc.add(NextPageObject(
+            key=Callback(
+                Search,
+                query=query,
+                title=oc.title2,
+                s_type=s_type,
+                offset=res['nextPageToken'],
+            ),
+            title=u'%s' % L('Next page')
+        ))
+
+    return oc
 
 
 @route(PREFIX + '/authorization')
@@ -561,6 +680,13 @@ def GetRegion():
 def GetLimitForOC(oc):
     ret = int(Prefs['items_per_page'])-len(oc)
     return 8 if ret <= 0 else ret
+
+
+def GetThumbFromSnippet(snippet):
+    try:
+        return snippet['thumbnails']['high']['url']
+    except:
+        return ''
 
 
 def ApiRequest(method, params):
