@@ -268,12 +268,11 @@ def Playlists(uid, title, offset=None):
         title2=u'%s' % title,
         replace_parent=bool(offset)
     )
-    limit = Prefs['items_per_page']
+
     if not offset and uid == 'me':
         AddSystemPlaylists(oc, uid, ('watchLater', 'likes', 'favorites'))
-        limit = limit - len(oc)
 
-    return AddPlaylists(oc, uid=uid, limit=limit, offset=offset)
+    return AddPlaylists(oc, uid=uid, offset=offset)
 
 
 @route(PREFIX + '/playlist')
@@ -319,7 +318,7 @@ def Subscriptions(uid, title, offset=None):
         title2=u'%s' % L('Subscriptions'),
         replace_parent=bool(offset)
     )
-    return AddSubscriptions(oc, uid=uid, offset=offset, limit=Prefs['items_per_page'])
+    return AddSubscriptions(oc, uid=uid, offset=offset)
 
 
 def AddVideos(oc, ids=[], **kwargs):
@@ -400,10 +399,11 @@ def AddSystemPlaylists(oc, uid, types=None):
     return oc
 
 
-def AddPlaylists(oc, uid, offset=None, limit=8):
+def AddPlaylists(oc, uid, offset=None):
+
     res = ApiRequest(
         'playlists',
-        ApiGetParams(uid=uid, limit=limit, offset=offset)
+        ApiGetParams(uid=uid, limit=GetLimitForOC(oc), offset=offset)
     )
 
     if res:
@@ -445,11 +445,11 @@ def AddPlaylists(oc, uid, offset=None, limit=8):
     return oc
 
 
-def AddSubscriptions(oc, uid, offset=None, limit=8):
+def AddSubscriptions(oc, uid, offset=None):
 
     res = ApiRequest(
         'subscriptions',
-        ApiGetParams(uid=uid, limit=limit, offset=offset, order='relevance')
+        ApiGetParams(uid=uid, limit=GetLimitForOC(oc), offset=offset, order='relevance')
     )
 
     if res:
@@ -556,6 +556,11 @@ def NotImplemented(**kwargs):
 
 def GetRegion():
     return Prefs['region'].split('/')[1]
+
+
+def GetLimitForOC(oc):
+    ret = int(Prefs['items_per_page'])-len(oc)
+    return 8 if ret <= 0 else ret
 
 
 def ApiRequest(method, params):
