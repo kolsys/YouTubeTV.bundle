@@ -20,7 +20,7 @@ Features
 * Full YouTube API v3 support
 * Does not required Google login and password
 * Navigation like YouTube Apps
-* Pagination and regional setting
+* Pagination and regional settings
 
 Installation
 -------
