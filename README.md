@@ -18,7 +18,7 @@ Features
 
 * Much faster than original Plex YouTube plugin
 * Full YouTube API v3 support
-* Does not required Google login and password
+* Does not require Google login and password
 * Navigation like YouTube Apps
 * Pagination and regional settings
 * Russian localization
