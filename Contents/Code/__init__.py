@@ -400,7 +400,7 @@ def AddSystemPlaylists(oc, uid, types=None):
     return oc
 
 
-def AddPlaylists(oc, uid, offset=None, limit=5):
+def AddPlaylists(oc, uid, offset=None, limit=8):
     res = ApiRequest(
         'playlists',
         ApiGetParams(uid=uid, limit=limit, offset=offset)
@@ -445,7 +445,7 @@ def AddPlaylists(oc, uid, offset=None, limit=5):
     return oc
 
 
-def AddSubscriptions(oc, uid, offset=None, limit=5):
+def AddSubscriptions(oc, uid, offset=None, limit=8):
 
     res = ApiRequest(
         'subscriptions',
