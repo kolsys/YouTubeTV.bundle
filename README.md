@@ -21,6 +21,7 @@ Features
 * Does not required Google login and password
 * Navigation like YouTube Apps
 * Pagination and regional settings
+* Russian localization
 
 Installation
 -------
