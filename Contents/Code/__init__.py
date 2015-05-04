@@ -37,10 +37,10 @@ ICON = 'icon-default.png'
 TITLE = u'%s' % L('Title')
 
 YT_CLIENT_ID = (
-    '29771278111-tmi3ipg0f8iqpahr3jppl05e8rtnen5b'
+    '383749313750-e0fj400djq4lukahnfjfqg6ckdbets63'
     '.apps.googleusercontent.com'
 )
-YT_SECRET = 'idCxu7tYAGbNqLMVr2mpicY7'
+YT_SECRET = 'rHHvL6tgl8Ej9KngduayT2ce'
 YT_SCOPE = 'https://www.googleapis.com/auth/youtube'
 YT_VERSION = 'v3'
 
