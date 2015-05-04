@@ -184,12 +184,6 @@ def VideoView(url):
     return URLService.MetadataObjectForURL(url=url, in_container=True)
 
 
-@indirect
-@route(PREFIX + '/video/play')
-def VideoPlay(url, fmt):
-    return Video.PlayVideo(url, fmt)
-
-
 @route(PREFIX + '/video/info')
 def VideoInfo(url):
     return NotImplemented()
@@ -407,7 +401,7 @@ def AddVideos(oc, ids=[], **kwargs):
         return oc
 
     for item in res['items']:
-        url = 'http://tv.youtube.plugins.plex.com/%s' % item['id']
+        url = Video.GetServiceURL(item['id'])
         snippet = item['snippet']
         oc.add(VideoClipObject(
             key=Callback(VideoView, url=url),
@@ -421,11 +415,7 @@ def AddVideos(oc, ids=[], **kwargs):
             originally_available_at=Datetime.ParseDate(
                 snippet['publishedAt']
             ).date(),
-            items=Video.GetMediaObjects(
-                url=Video.GetUrlByVideoId(item['id']),
-                play_callback=VideoPlay,
-                definition=item['contentDetails']['definition']
-            )
+            items=URLService.MediaObjectsForURL(url)
         ))
 
     if 'nextPageToken' in res and 'videoCategoryId' in kwargs:

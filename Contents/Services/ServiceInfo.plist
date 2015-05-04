@@ -8,8 +8,8 @@
 		<dict>
 			<key>URLPatterns</key>
 			<array>
-				<string>^(https?:)?//(www\.|m\.)?youtu(be(\.googleapis)?\.com|\.be)/(?!account(_|\?)?|artist(/|\?)|blog\?|categories\?|channels\?|charts|embed/(__videoid__|videoseries\?)|playlist\?|p/|profile\?|results\?|subscribe_widget|\?tab=).+</string>
 				<string>^(https?:)?//tv\.youtube\.plugins\.plex\.com/.+</string>
+				<string>^(https?:)?//(www\.|m\.)?youtu(be(\.googleapis)?\.com|\.be)/(?!account(_|\?)?|artist(/|\?)|blog\?|categories\?|channels\?|charts|embed/(__videoid__|videoseries\?)|playlist\?|p/|profile\?|results\?|subscribe_widget|\?tab=).+</string>
 			</array>
 		</dict>
 	</dict>

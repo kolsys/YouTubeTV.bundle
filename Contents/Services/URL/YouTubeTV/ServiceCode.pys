@@ -39,7 +39,7 @@ RE_VIDEO_ID = Regex('"video_id":\s"([^"]+)')
 def NormalizeURL(url):
     ''' This modified version from Services.bundle '''
 
-    if 'm.youtube.com' in url and 'ajax=1' in url:
+    if 'tv.youtube.plugins.plex.com':
         return url
 
     video_id = None
@@ -48,9 +48,6 @@ def NormalizeURL(url):
         url = urlparse(url)
 
     domain = url.netloc
-
-    if domain == 'tv.youtube.plugins.plex.com':
-        return Video.GetUrlByVideoId(url.path[1:])
 
     # Edit mobile urls
     if domain.startswith('m.'):
@@ -118,7 +115,7 @@ def NormalizeURL(url):
             else:
                 return None
 
-    return Video.GetUrlByVideoId(video_id)
+    return Video.GetServiceURL(video_id)
 
 
 def MetadataObjectForURL(url):
@@ -141,10 +138,28 @@ def MetadataObjectForURL(url):
     )
 
 
-def MediaObjectsForURL(url):
-    return Video.GetMediaObjects(url=url, play_callback=PlayVideo)
+def MediaObjectsForURL(url, definition='hd'):
+    return [
+        MediaObject(
+            parts=[
+                PartObject(key=Callback(PlayVideo, url=url, fmt=key))
+            ],
+            video_resolution=Video.RESOLUTIONS[key],
+            container=Container.MP4,
+            video_codec=VideoCodec.H264,
+            audio_codec=AudioCodec.AAC,
+            optimized_for_streaming=True
+        ) for key in Video.DEFINITIONS[definition]
+    ]
 
 
 @indirect
 def PlayVideo(url, fmt):
-    return Video.PlayVideo(url, fmt)
+    info = Video.GetVideoUrls(url)
+
+    fmt = int(fmt)
+    if fmt not in info:
+        fmt = info.keys()[0]
+        Log.Debug('Get default format')
+
+    return IndirectResponse(VideoClipObject, key=info[fmt])

@@ -27,35 +27,36 @@
 
 from datetime import timedelta
 
-definitions = {
+DEFINITIONS = {
     'sd': (36, 18),
     'hd': (22, 18, 36),
 }
-resolutions = {
+RESOLUTIONS = {
     22: 720,
     18: 360,
     36: 240,
 }
 
 
-def GetUrlByVideoId(video_id):
-    return 'https://m.youtube.com/watch?ajax=1&v=%s' % video_id
+def GetServiceURL(vid):
+    return 'http://tv.youtube.plugins.plex.com/%s' % vid
+
+
+def GetMetaUrlByServiceURL(url):
+    return 'https://m.youtube.com/watch?ajax=1&v=%s' % url[url.rfind('/')+1:]
 
 
 def GetVideoData(url):
-    # make url for simple video_id
-    if 'm.youtube.com' not in url:
-        url = 'https://m.youtube.com/watch?ajax=1&v=%s' % url
     try:
         res = JSON.ObjectFromString(HTTP.Request(
-            url,
+            GetMetaUrlByServiceURL(url),
             headers={
                 'User-Agent': (
                     'Mozilla/5.0 (iPad; CPU OS 7_0_4 like Mac OS X) '
                     'AppleWebKit/537.51.1 (KHTML, like Gecko) Version/7.0 '
                     'Mobile/11B554a Safari/9537.54'
                 )
-            }   # FIXME Cache
+            }
         ).content[4:])['content']
 
     except:
@@ -78,37 +79,12 @@ def GetVideoUrls(url):
     for item in fmt_meta:
         item = String.ParseQueryString(item)
         for val in item:
-            ret[item['itag'][0]] = item['url'][0]
+            ret[int(item['itag'][0])] = item['url'][0]
 
     if not len(ret):
         raise Ex.MediaNotAvailable
 
     return ret
-
-
-def GetMediaObjects(url, play_callback, definition='hd'):
-    return [
-        MediaObject(
-            parts=[
-                PartObject(key=Callback(play_callback, url=url, fmt=key))
-            ],
-            video_resolution=resolutions[key],
-            audio_channels=2,
-            container='mp4',
-            video_codec=VideoCodec.H264,
-            audio_codec=AudioCodec.AAC,
-            optimized_for_streaming=True
-        ) for key in definitions[definition]
-    ]
-
-
-def PlayVideo(url, fmt):
-    info = GetVideoUrls(url)
-    fmt = int(fmt)
-    if fmt not in info:
-        fmt = info.keys()[0]
-
-    return IndirectResponse(VideoClipObject, key=info[fmt])
 
 
 def ParseDuration(durationstr):
