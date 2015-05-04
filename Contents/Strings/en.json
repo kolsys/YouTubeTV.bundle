@@ -24,11 +24,12 @@
 	"Subscriptions": "Subscriptions",
 	"More playlists": "More playlists",
 	"More subscriptions": "More subscriptions",
-	"Please enter code": "Please enter code",
 	"Complete authorization": "Complete authorization",
 	"Service temporary unavaliable": "Service temporary unavaliable",
 	"Preferred Region for Videos and channels": "Preferred Region for Videos and channels",
 	"Search playlists": "Search playlists",
 	"Search channels": "Search channels",
 	"Browse channels": "Browse channels",
+	"enterCodeSite": "Please, enter code \"%s\" in %s",
+	"codeIs": "Code: %s",
 }

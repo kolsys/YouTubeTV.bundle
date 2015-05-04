@@ -468,7 +468,7 @@ def AddSystemPlaylists(oc, uid, types=None):
                     oid=items[key],
                     title=L(key)
                 ),
-                title=L(key),
+                title=u'%s' % L(key),
             ))
 
     return oc
@@ -630,21 +630,19 @@ def Authorization():
 
     if code:
         oc = ObjectContainer(
-            header=u'%s' % L('Authorize'),
-            message=L('Please enter code'),
             view_group='details',
             no_cache=True,
             objects=[
                 DirectoryObject(
                     key=Callback(MainMenu, complete=True),
-                    title=F('Code: %s', code),
-                    summary=F('Please, enter code "%s" in %s', code, url),
+                    title=u'%s' % F('codeIs', code),
+                    summary=u'%s' % F('enterCodeSite', code, url),
                     tagline=url,
                 ),
                 DirectoryObject(
                     key=Callback(MainMenu, complete=True),
-                    title=L('Authorize'),
-                    summary=L('Complete authorization'),
+                    title=u'%s' % L('Authorize'),
+                    summary=u'%s' % L('Complete authorization'),
                 ),            ]
         )
         return oc
