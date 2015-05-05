@@ -162,4 +162,5 @@ def PlayVideo(url, fmt):
         fmt = info.keys()[0]
         Log.Debug('Get default format')
 
+    Log.Debug('Play itag: %d' % fmt)
     return IndirectResponse(VideoClipObject, key=info[fmt])

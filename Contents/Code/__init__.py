@@ -375,7 +375,7 @@ def Playlist(oid, title, offset=None):
                 oid=oid,
                 offset=res['nextPageToken'],
             ),
-            title=u'%s' % L('Nex page')
+            title=u'%s' % L('Next page')
         ))
 
     return oc
