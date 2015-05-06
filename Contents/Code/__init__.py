@@ -103,7 +103,7 @@ def MainMenu(complete=False):
         key=Callback(Channel, oid='me', title=L('My channel')),
         title=u'%s' % L('My channel')
     ))
-    AddSystemPlaylists(oc, 'me', ('watchHistory', 'likes'))
+    AddSystemPlaylists(oc, 'me', ('watchLater', 'watchHistory', 'likes'))
     oc.add(InputDirectoryObject(
         key=Callback(
             Search,
