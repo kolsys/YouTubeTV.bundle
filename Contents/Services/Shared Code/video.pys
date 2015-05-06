@@ -66,20 +66,23 @@ def GetVideoData(url):
 
 
 def GetVideoUrls(url):
-    try:
-        info = GetVideoData(
-            url
-        )['swfcfg']['args']['url_encoded_fmt_stream_map']
-    except:
-        raise Ex.MediaNotAvailable
-
-    fmt_meta = info.split(',')
+    info = GetVideoData(url)
 
     ret = {}
-    for item in fmt_meta:
-        item = String.ParseQueryString(item)
-        for val in item:
-            ret[int(item['itag'][0])] = item['url'][0]
+    try:
+        fmt_meta = info['swfcfg']['args']['url_encoded_fmt_stream_map'].split(
+            ','
+        )
+        for item in fmt_meta:
+            item = String.ParseQueryString(item)
+            for val in item:
+                ret[int(item['itag'][0])] = item['url'][0]
+    except:
+        try:
+            for item in info['player_data']['fmt_stream_map']:
+                ret[int(item['itag'])] = item['url']
+        except:
+            pass
 
     if not len(ret):
         raise Ex.MediaNotAvailable

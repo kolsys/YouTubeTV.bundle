@@ -120,15 +120,21 @@ def NormalizeURL(url):
 
 def MetadataObjectForURL(url):
     item = Video.GetVideoData(url)
-    if not item:
-        raise Ex.MediaNotAvailable
+
+    try:
+        meta = item['swfcfg']['args']
+    except:
+        try:
+            meta = item['player_data']['player_vars']
+        except:
+            raise Ex.MediaNotAvailable
 
     return VideoClipObject(
         title=u'%s' % item['video']['title'],
         summary=u'%s' % item['video']['description'],
         thumb=item['video']['thumbnail_for_watch'],
-        rating=(float(item['swfcfg']['args']['avg_rating'])*2),
-        tags=item['swfcfg']['args']['keywords'].split(','),
+        rating=(float(meta['avg_rating'])*2),
+        tags=meta['keywords'].split(','),
         # TODO
         # originally_available_at=Datetime.ParseDate(
         #     item['video']['time_created_text'],
