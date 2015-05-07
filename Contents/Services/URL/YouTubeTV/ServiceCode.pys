@@ -131,7 +131,10 @@ def MetadataObjectForURL(url):
 
     return VideoClipObject(
         title=u'%s' % item['video']['title'],
-        summary=u'%s' % item['video']['description'],
+        summary=u'%s\n%s' % (
+            item['video']['public_name'],
+            item['video']['description']
+        ),
         thumb=item['video']['thumbnail_for_watch'],
         rating=(float(meta['avg_rating'])*2),
         tags=meta['keywords'].split(','),

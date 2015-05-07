@@ -165,7 +165,11 @@ def MySubscriptions(offset=None):
         ids.append(item['contents'][0]['content']['items'][0]['encrypted_id'])
 
     oc = ObjectContainer(title2=L('My subscriptions'))
-    AddVideos(oc, ids)
+    AddVideos(
+        oc,
+        ApiGetVideos(ids=ids),
+        extended=Prefs['my_subscriptions_extened']
+    )
 
     if offset:
         oc.add(NextPageObject(
@@ -185,8 +189,47 @@ def VideoView(url):
 
 
 @route(PREFIX + '/video/info')
-def VideoInfo(url):
-    return NotImplemented()
+def VideoInfo(vid):
+
+    oc = ObjectContainer()
+    res = ApiGetVideos(ids=[vid])
+
+    AddVideos(oc, res, title=L('Play video'))
+
+    if not len(oc):
+        return NoContents()
+
+    item = res['items'][0]
+
+    oc.title2 = u'%s' % item['snippet']['title']
+
+    oc.add(DirectoryObject(
+        key=Callback(
+            Channel,
+            oid=item['snippet']['channelId'],
+            title=item['snippet']['channelTitle']
+        ),
+        title=u'%s' % item['snippet']['channelTitle'],
+    ))
+
+    oc.add(DirectoryObject(
+        key=Callback(
+            Search,
+            title=L('Related videos'),
+            query=None,
+            relatedToVideoId=item['id']
+        ),
+        title=u'%s' % L('Related videos')
+    ))
+    oc.add(DirectoryObject(
+        key=Callback(PlaylistAdd, aid=item['id'], key='watchLater'),
+        title=u'%s' % L('watchLater')
+    ))
+    oc.add(DirectoryObject(
+        key=Callback(PlaylistAdd, aid=item['id'], key='likes'),
+        title=u'%s' % L('I like this')
+    ))
+    return oc
 
 
 @route(PREFIX + '/channels')
@@ -307,17 +350,28 @@ def Category(title, oid=0, offset=None):
         title2=u'%s' % title,
         replace_parent=bool(offset)
     )
-    AddVideos(
-        oc,
+    res = ApiGetVideos(
         chart='mostPopular',
         limit=Prefs['items_per_page'],
         offset=offset,
         regionCode=GetRegion(),
-        videoCategoryId=oid,
+        videoCategoryId=oid
     )
+    AddVideos(oc, res)
 
     if not len(oc):
         return NoContents()
+
+    if 'nextPageToken' in res:
+        oc.add(NextPageObject(
+            key=Callback(
+                Category,
+                title=oc.title2,
+                oid=oid,
+                offset=res['nextPageToken'],
+            ),
+            title=u'%s' % L('More playlists')
+        ))
 
     return oc
 
@@ -339,7 +393,6 @@ def Playlists(uid, title, offset=None):
             ),
             title=u'%s' % L('Search'), prompt=u'%s' % L('Search playlists')
         ))
-
 
     return AddPlaylists(oc, uid=uid, offset=offset)
 
@@ -365,7 +418,7 @@ def Playlist(oid, title, offset=None):
     for item in res['items']:
         ids.append(item['contentDetails']['videoId'])
 
-    AddVideos(oc, ids)
+    AddVideos(oc, ApiGetVideos(ids=ids), extended=Prefs['playlists_extened'])
 
     if 'nextPageToken' in res:
         oc.add(NextPageObject(
@@ -381,6 +434,35 @@ def Playlist(oid, title, offset=None):
     return oc
 
 
+@route(PREFIX + '/playlist/add')
+def PlaylistAdd(aid, key=None, oid=None, a_type='video'):
+    if key is not None:
+        items = ApiGetSystemPlayLists('me')
+        if key in items:
+            oid = items[key]
+
+    if not oid:
+        return ErrorMessage()
+
+    res = ApiRequest('playlistItems', {'part': 'snippet'}, {
+        'snippet': {
+            'playlistId': oid,
+            'resourceId': {
+                'kind': 'youtube#'+a_type,
+                a_type+'Id': aid,
+            }
+        }
+    })
+
+    if not res:
+        return ErrorMessage()
+
+    return ObjectContainer(
+        header=u'%s' % L('Success'),
+        message=u'%s' % L('Action complete')
+    )
+
+
 @route(PREFIX + '/subscriptions')
 def Subscriptions(uid, title, offset=None):
     oc = ObjectContainer(
@@ -390,61 +472,48 @@ def Subscriptions(uid, title, offset=None):
     return AddSubscriptions(oc, uid=uid, offset=offset)
 
 
-def AddVideos(oc, ids=[], **kwargs):
-
-    res = ApiRequest('videos', ApiGetParams(
-        part='snippet,contentDetails',
-        id=','.join(ids),
-        **kwargs
-    ))
+def AddVideos(oc, res, title=None, extended=False):
     if not res or not len(res['items']):
         return oc
 
     for item in res['items']:
-        url = Video.GetServiceURL(item['id'])
         snippet = item['snippet']
-        oc.add(VideoClipObject(
-            key=Callback(VideoView, url=url),
-            rating_key=url,
-            title=u'%s' % snippet['title'],
-            summary=u'%s' % snippet['description'],
-            thumb=GetThumbFromSnippet(snippet),
-            duration=(Video.ParseDuration(
-                item['contentDetails']['duration']
-            )*1000),
-            originally_available_at=Datetime.ParseDate(
-                snippet['publishedAt']
-            ).date(),
-            items=URLService.MediaObjectsForURL(url)
-        ))
+        duration = Video.ParseDuration(
+            item['contentDetails']['duration']
+        )*1000
+        summary = u'%s\n%s' % (snippet['channelTitle'], snippet['description'])
 
-    if 'nextPageToken' in res and 'videoCategoryId' in kwargs:
-        oc.add(NextPageObject(
-            key=Callback(
-                Category,
-                title=oc.title2,
-                oid=kwargs['videoCategoryId'],
-                offset=res['nextPageToken'],
-            ),
-            title=u'%s' % L('More playlists')
-        ))
+        if extended:
+            oc.add(DirectoryObject(
+                key=Callback(VideoInfo, vid=item['id']),
+                title=u'%s' % snippet['title'],
+                summary=summary,
+                thumb=GetThumbFromSnippet(snippet),
+                duration=duration,
+            ))
+        else:
+            url = Video.GetServiceURL(item['id'])
+            oc.add(VideoClipObject(
+                key=Callback(VideoView, url=url),
+                rating_key=url,
+                title=u'%s' % snippet['title'] if title is None else title,
+                summary=summary,
+                thumb=GetThumbFromSnippet(snippet),
+                duration=duration,
+                originally_available_at=Datetime.ParseDate(
+                    snippet['publishedAt']
+                ).date(),
+                items=URLService.MediaObjectsForURL(url)
+            ))
+
     return oc
 
 
 def AddSystemPlaylists(oc, uid, types=None):
 
-    res = ApiRequest(
-        'channels',
-        ApiGetParams(
-            part='contentDetails',
-            uid=uid,
-            id=uid if uid != 'me' else None
-        )
-    )
+    items = ApiGetSystemPlayLists(uid)
 
-    if res and res['items']:
-        items = res['items'][0]['contentDetails']['relatedPlaylists']
-
+    if items:
         if types is not None:
             items = dict(filter(lambda v: v[0] in types, items.items()))
 
@@ -545,7 +614,7 @@ def AddSubscriptions(oc, uid, offset=None):
     return oc
 
 
-def Search(query, title=L('Search'), s_type='video', offset=0):
+def Search(query, title=L('Search'), s_type='video', offset=0, **kwargs):
     is_video = s_type == 'video'
     res = ApiRequest('search', ApiGetParams(
         part='id' if is_video else 'snippet',
@@ -554,7 +623,8 @@ def Search(query, title=L('Search'), s_type='video', offset=0):
         regionCode=GetRegion(),
         videoDefinition='high' if is_video and Prefs['search_hd'] else '',
         offset=offset,
-        limit=Prefs['items_per_page']
+        limit=Prefs['items_per_page'],
+        **kwargs
     ))
 
     if not res or not len(res['items']):
@@ -570,7 +640,7 @@ def Search(query, title=L('Search'), s_type='video', offset=0):
         for item in res['items']:
             ids.append(item['id']['videoId'])
 
-        AddVideos(oc, ids=ids)
+        AddVideos(oc, ApiGetVideos(ids=ids), extended=Prefs['search_extened'])
     else:
         s_callback = Channel if s_type == 'channel' else Playlist
         s_key = s_type+'Id'
@@ -654,6 +724,13 @@ def NoContents():
     )
 
 
+def ErrorMessage():
+    return ObjectContainer(
+        header=u'%s' % L('Error'),
+        message=u'%s' % L('An error has occurred')
+    )
+
+
 def NotImplemented(**kwargs):
     return ObjectContainer(
         header=u'%s' % L('Not Implemented'),
@@ -677,19 +754,46 @@ def GetThumbFromSnippet(snippet):
         return ''
 
 
-def ApiRequest(method, params):
+def ApiGetVideos(ids=[], title=None, extended=False, **kwargs):
+    return ApiRequest('videos', ApiGetParams(
+        part='snippet,contentDetails',
+        id=','.join(ids),
+        **kwargs
+    ))
+
+
+def ApiGetSystemPlayLists(uid):
+    res = ApiRequest(
+        'channels',
+        ApiGetParams(
+            part='contentDetails',
+            uid=uid,
+            id=uid if uid != 'me' else None
+        )
+    )
+
+    if res and res['items']:
+        return res['items'][0]['contentDetails']['relatedPlaylists']
+
+    return {}
+
+
+def ApiRequest(method, params, data=None):
     if not CheckToken():
         return None
 
     params['access_token'] = Dict['access_token']
+
     try:
-        res = JSON.ObjectFromURL(
+        res = JSON.ObjectFromString(HTTP.Request(
             'https://www.googleapis.com/youtube/%s/%s?%s' % (
                 YT_VERSION,
                 method,
                 urlencode(params)
-            )
-        )
+            ),
+            headers={'Content-Type': 'application/json; charset=UTF-8'},
+            data=None if not data else JSON.StringFromObject(data)
+        ).content)
         if 'error' in res:
             return None
     except:

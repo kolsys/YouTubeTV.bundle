@@ -1,5 +1,23 @@
 [
     {
+        "id": "my_subscriptions_extened",
+        "type": "bool",
+        "label": "Extended video info in My subscriptions",
+        "default": "false",
+    },
+    {
+        "id": "playlists_extened",
+        "type": "bool",
+        "label": "Extended video info in Playlists",
+        "default": "false",
+    },
+    {
+        "id": "search_extened",
+        "type": "bool",
+        "label": "Extended video info in Search",
+        "default": "true",
+    },
+    {
         "id": "search_hd",
         "type": "bool",
         "label": "Search HD only",

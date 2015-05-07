@@ -31,5 +31,11 @@
 	"Search channels": "Поиск каналов",
 	"Browse channels": "Каталог каналов",
 	"enterCodeSite": "Пожалуйста, введите код \"%s\" на сайте %s",
-	"codeIs": "Код: %s"
+	"codeIs": "Код: %s",
+	"Play video": "Просмотр",
+	"Related videos": "Похожие видео",
+	"I like this": "Мне понравилось",
+	"Extended video info in My subscriptions": "Расширенная информация по видео в Моих подписках",
+	"Extended video info in Playlists": "Расширенная информация по видео в Плейлистах",
+	"Extended video info in Search": "Расширенная информация по видео в Поиске"
 }
