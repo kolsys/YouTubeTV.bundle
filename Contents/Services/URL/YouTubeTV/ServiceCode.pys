@@ -39,7 +39,7 @@ RE_VIDEO_ID = Regex('"video_id":\s"([^"]+)')
 def NormalizeURL(url):
     ''' This modified version from Services.bundle '''
 
-    if 'tv.youtube.plugins.plex.com':
+    if 'tv.youtube.plugins.plex.com' in url:
         return url
 
     video_id = None
@@ -48,12 +48,6 @@ def NormalizeURL(url):
         url = urlparse(url)
 
     domain = url.netloc
-
-    # Edit mobile urls
-    if domain.startswith('m.'):
-        # Rewrite mobile urls that contain a hash
-        if url.fragment != '':
-            url = urlparse('https://www.youtube.com%s' % url.fragment)
 
     # http://www.youtube.com/?v=lgTssWW2Qw4&feature=player_embedded
     # http://www.youtube.com/watch?v=lgTssWW2Qw4&feature=player_embedded
