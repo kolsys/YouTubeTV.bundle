@@ -44,6 +44,21 @@ YT_SECRET = 'rHHvL6tgl8Ej9KngduayT2ce'
 YT_SCOPE = 'https://www.googleapis.com/auth/youtube'
 YT_VERSION = 'v3'
 
+ICONS = {
+    'likes': R('q_ic_drawer_likes_playlist_normal.png'),
+    'favorites': R('q_ic_drawer_favorites_normal.png'),
+    'uploads': R('q_ic_drawer_uploads_normal.png'),
+    'watchHistory': R('q_ic_drawer_watch_history_normal.png'),
+    'watchLater': R('q_ic_drawer_watch_later_normal.png'),
+    'subscriptions': R('q_ic_drawer_subscriptions_normal.png'),
+    'browseChannels': R('q_ic_drawer_browse_channels_normal.png'),
+    'playlists': R('q_ic_drawer_playlists_normal.png'),
+    'whatToWhatch': R('q_ic_drawer_what_to_watch_normal.png'),
+    'account': R('ic_account_switcher_sign_in.png'),
+    'categories': R('q_ic_drawer_mix_normal.png'),
+    'options': R('api_ic_options.png'),
+    'suggestions': R('ic_edit_suggestion.png'),
+}
 
 ###############################################################################
 # Init
@@ -73,6 +88,7 @@ def MainMenu(complete=False):
         oc.add(DirectoryObject(
             key=Callback(Authorization),
             title=u'%s' % L('Authorize'),
+            thumb=ICONS['options'],
         ))
         if complete:
             oc.header = L('Authorize')
@@ -81,27 +97,33 @@ def MainMenu(complete=False):
 
     oc.add(DirectoryObject(
         key=Callback(MySubscriptions),
-        title=u'%s' % L('My Subscriptions')
+        title=u'%s' % L('My Subscriptions'),
+        thumb=ICONS['subscriptions'],
     ))
     oc.add(DirectoryObject(
         key=Callback(Category, title=L('What to Watch')),
-        title=u'%s' % L('What to Watch')
+        title=u'%s' % L('What to Watch'),
+        thumb=ICONS['whatToWhatch'],
     ))
     oc.add(DirectoryObject(
         key=Callback(Playlists, uid='me', title=L('Playlists')),
-        title=u'%s' % L('Playlists')
+        title=u'%s' % L('Playlists'),
+        thumb=ICONS['playlists'],
     ))
     oc.add(DirectoryObject(
         key=Callback(Categories, title=L('Categories'), c_type='video'),
-        title=u'%s' % L('Categories')
+        title=u'%s' % L('Categories'),
+        thumb=ICONS['categories'],
     ))
     oc.add(DirectoryObject(
         key=Callback(Categories, title=L('Browse channels'), c_type='guide'),
-        title=u'%s' % L('Browse channels')
+        title=u'%s' % L('Browse channels'),
+        thumb=ICONS['browseChannels'],
     ))
     oc.add(DirectoryObject(
         key=Callback(Channel, oid='me', title=L('My channel')),
-        title=u'%s' % L('My channel')
+        title=u'%s' % L('My channel'),
+        thumb=ICONS['account'],
     ))
     AddSystemPlaylists(oc, 'me', ('watchLater', 'watchHistory', 'likes'))
     oc.add(InputDirectoryObject(
@@ -210,6 +232,7 @@ def VideoInfo(vid):
             title=item['snippet']['channelTitle']
         ),
         title=u'%s' % item['snippet']['channelTitle'],
+        thumb=ICONS['account'],
     ))
 
     oc.add(DirectoryObject(
@@ -219,16 +242,21 @@ def VideoInfo(vid):
             query=None,
             relatedToVideoId=item['id']
         ),
-        title=u'%s' % L('Related videos')
+        title=u'%s' % L('Related videos'),
+        thumb=ICONS['suggestions'],
     ))
-    oc.add(DirectoryObject(
-        key=Callback(PlaylistAdd, aid=item['id'], key='watchLater'),
-        title=u'%s' % L('watchLater')
-    ))
-    oc.add(DirectoryObject(
-        key=Callback(PlaylistAdd, aid=item['id'], key='likes'),
-        title=u'%s' % L('I like this')
-    ))
+
+    for key, title in {
+        'watchLater': L('watchLater'),
+        'likes': L('I like this'),
+        'favorites': L('Add to favorites'),
+    }.items():
+        oc.add(DirectoryObject(
+            key=Callback(PlaylistAdd, aid=item['id'], key=key),
+            title=u'%s' % title,
+            thumb=ICONS[key],
+        ))
+
     return oc
 
 
@@ -297,7 +325,8 @@ def Channel(oid, title):
             title=u'%s - %s' % (title, L('Subscriptions')),
             uid=oid
         ),
-        title=u'%s' % L('Subscriptions')
+        title=u'%s' % L('Subscriptions'),
+        thumb=ICONS['subscriptions'],
     ))
     AddPlaylists(oc, uid=oid)
 
@@ -528,6 +557,7 @@ def AddSystemPlaylists(oc, uid, types=None):
                     title=L(key)
                 ),
                 title=u'%s' % L(key),
+                thumb=ICONS[key] if key in ICONS else None,
             ))
 
     return oc
