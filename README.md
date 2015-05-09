@@ -22,6 +22,7 @@ Features
 * Navigation like YouTube Apps
 * Pagination and regional settings
 * Russian localization
+* "Like" and "Watch later" video functions
 
 Installation
 -------
