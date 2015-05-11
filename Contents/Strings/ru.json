@@ -38,5 +38,8 @@
 	"Add to favorites": "Добавить в избранное",
 	"Extended video info in My subscriptions": "Расширенная информация по видео в Моих подписках",
 	"Extended video info in Playlists": "Расширенная информация по видео в Плейлистах",
-	"Extended video info in Search": "Расширенная информация по видео в Поиске"
+	"Extended video info in Search": "Расширенная информация по видео в Поиске",
+	"Update available: %s": "Доступно обновление: %s",
+	"Install latest version of the channel.": "Установить последнюю версию плагина.",
+	"Channel updated to version %s": "Плагин обновлен до версии %s"
 }

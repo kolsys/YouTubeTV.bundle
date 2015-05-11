@@ -144,7 +144,7 @@ class Updater:
             HTTP.ClearCache()
 
             return ObjectContainer(
-                header=u'%s' % L('Update successful'),
+                header=u'%s' % L('Success'),
                 message=u'%s' % F(
                     'Channel updated to version %s',
                     self.update['version']
@@ -152,6 +152,6 @@ class Updater:
             )
         except Exception as e:
             return ObjectContainer(
-                header=u'%s' % L('Update failed'),
+                header=u'%s' % L('Error'),
                 message=u'%s' % e
             )

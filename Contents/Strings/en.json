@@ -38,5 +38,8 @@
 	"Add to favorites": "Add to favorites",
 	"Extended video info in My subscriptions": "Extended video info in My subscriptions",
 	"Extended video info in Playlists": "Extended video info in Playlists",
-	"Extended video info in Search": "Extended video info in Search"
+	"Extended video info in Search": "Extended video info in Search",
+	"Update available: %s": "Update available: %s",
+	"Install latest version of the channel.": "Install latest version of the channel.",
+	"Channel updated to version %s": "Channel updated to version %s"
 }
