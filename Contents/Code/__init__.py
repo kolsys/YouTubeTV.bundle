@@ -27,6 +27,7 @@
 
 from urllib import urlencode
 from time import time
+from updater import Updater
 
 Video = SharedCodeService.video
 
@@ -94,6 +95,8 @@ def MainMenu(complete=False):
             oc.header = L('Authorize')
             oc.message = L('You must enter code for continue')
         return oc
+
+    Updater(PREFIX+'/update', oc)
 
     oc.add(DirectoryObject(
         key=Callback(MySubscriptions),
