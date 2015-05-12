@@ -4,7 +4,8 @@
 # $Id$
 #
 # Universal plugin updater module for Plex Server Channels that
-# implement automatic plugins updates from atom feed.
+# implement automatic plugins updates from remote config.
+# Support Github API by default
 #
 # https://github.com/kolsys/plex-channel-updater
 #
@@ -117,8 +118,6 @@ class Updater:
         except:
             pass
 
-        Log.Debug(self.info)
-
         return bool(self.info)
 
     def DoUpdate(self):
@@ -140,8 +139,6 @@ class Updater:
                 else:
                     Core.storage.save(full, data)
             del zip_data
-
-            HTTP.ClearCache()
 
             return ObjectContainer(
                 header=u'%s' % L('Success'),
