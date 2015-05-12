@@ -114,14 +114,10 @@ def NormalizeURL(url):
 
 def MetadataObjectForURL(url):
     item = Video.GetVideoData(url)
+    meta = Video.MetaFromInfo(item)
 
-    try:
-        meta = item['swfcfg']['args']
-    except:
-        try:
-            meta = item['player_data']['player_vars']
-        except:
-            raise Ex.MediaNotAvailable
+    if not meta:
+        raise Ex.MediaNotAvailable
 
     return VideoClipObject(
         title=u'%s' % item['video']['title'],
@@ -137,7 +133,9 @@ def MetadataObjectForURL(url):
         #     item['video']['time_created_text'],
         #     '%b %d, %Y'
         # ).date(),
-        duration=(item['video']['length_seconds']*1000),
+        duration=(item['video']['length_seconds']*1000) if item[
+            'video'
+        ]['length_seconds'] else None,
     )
 
 
@@ -162,8 +160,13 @@ def PlayVideo(url, fmt):
 
     fmt = int(fmt)
     if fmt not in info:
-        fmt = info.keys()[0]
+        fmt = sorted(info, key=lambda k: Video.RESOLUTIONS[k], reverse=True)[0]
         Log.Debug('Get default format')
 
     Log.Debug('Play itag: %d' % fmt)
+
+    # Live stream
+    if info[fmt][-5:] == '.m3u8':
+        info[fmt] = HTTPLiveStreamURL(info[fmt])
+
     return IndirectResponse(VideoClipObject, key=info[fmt])
