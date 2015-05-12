@@ -269,6 +269,7 @@ def Channels(oid, title, offset=None):
         'channels',
         ApiGetParams(
             categoryId=oid,
+            hl=GetRegion(),
             limit=Prefs['items_per_page'],
             offset=offset
         )
@@ -338,10 +339,12 @@ def Channel(oid, title):
 
 @route(PREFIX + '/categories')
 def Categories(title, c_type):
-    res = ApiRequest(
-        '%sCategories' % c_type,
-        {'part': 'snippet', 'regionCode': GetRegion()}
-    )
+    locale = GetRegion()
+    res = ApiRequest('%sCategories' % c_type, {
+        'part': 'snippet',
+        'regionCode': locale,
+        'hl': locale,
+    })
 
     if not res or not len(res['items']):
         return NoContents()
@@ -402,7 +405,7 @@ def Category(title, oid=0, offset=None):
                 oid=oid,
                 offset=res['nextPageToken'],
             ),
-            title=u'%s' % L('More playlists')
+            title=u'%s' % L('Next page')
         ))
 
     return oc
@@ -568,10 +571,12 @@ def AddSystemPlaylists(oc, uid, types=None):
 
 def AddPlaylists(oc, uid, offset=None):
 
-    res = ApiRequest(
-        'playlists',
-        ApiGetParams(uid=uid, limit=GetLimitForOC(oc), offset=offset)
-    )
+    res = ApiRequest('playlists', ApiGetParams(
+        uid=uid,
+        limit=GetLimitForOC(oc),
+        offset=offset,
+        hl=GetRegion()
+    ))
 
     if res:
         if 'items' in res:
@@ -609,10 +614,11 @@ def AddPlaylists(oc, uid, offset=None):
 
 def AddSubscriptions(oc, uid, offset=None):
 
-    res = ApiRequest(
-        'subscriptions',
-        ApiGetParams(uid=uid, limit=GetLimitForOC(oc), offset=offset, order='relevance')
-    )
+    res = ApiRequest('subscriptions', ApiGetParams(
+        uid=uid,
+        limit=GetLimitForOC(oc),
+        offset=offset, order='relevance'
+    ))
 
     if res:
         if 'items' in res:
@@ -790,20 +796,19 @@ def GetThumbFromSnippet(snippet):
 def ApiGetVideos(ids=[], title=None, extended=False, **kwargs):
     return ApiRequest('videos', ApiGetParams(
         part='snippet,contentDetails',
+        hl=GetRegion(),
         id=','.join(ids),
         **kwargs
     ))
 
 
 def ApiGetSystemPlayLists(uid):
-    res = ApiRequest(
-        'channels',
-        ApiGetParams(
-            part='contentDetails',
-            uid=uid,
-            id=uid if uid != 'me' else None
-        )
-    )
+    res = ApiRequest('channels', ApiGetParams(
+        part='contentDetails',
+        hl=GetRegion(),
+        uid=uid,
+        id=uid if uid != 'me' else None
+    ))
 
     if res and res['items']:
         return res['items'][0]['contentDetails']['relatedPlaylists']
