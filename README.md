@@ -12,6 +12,7 @@ Current status
 * Support playlists
 * Support channels catalogue and video categories browsing
 * Search playlists, channels and videos
+* Support live streams
 
 Features
 -------
@@ -22,7 +23,8 @@ Features
 * Navigation like YouTube Apps
 * Pagination and regional settings
 * Russian, Swedish and Danish localization
-* "Like" and "Watch later" video functions
+* YouTube content localization by region preferences
+* "Like" and "Watch later" video functions including edit function
 * Update function
 
 Installation
