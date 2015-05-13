@@ -54,8 +54,9 @@ def NormalizeURL(url):
     # http://www.youtube.com/details?v=pjyfMCTAqKU
     if url.path == '/' or RE_PATH_1.match(url.path):
         qs = String.ParseQueryString(url.query)
-    if 'v' in qs:
-        video_id = qs['v'][0][0:11]
+
+        if 'v' in qs:
+            video_id = qs['v'][0][0:11]
 
     # http://youtu.be/vXhmyyXFd5I
     elif domain == 'youtu.be':
@@ -68,8 +69,9 @@ def NormalizeURL(url):
     # http://www.youtube.com/user/fujitvlive?feature=lb&v=eYpAUMZLXqo
     elif url.path[0:6] == '/user/' and "v=" in url.query:
         qs = String.ParseQueryString(url.query)
-    if 'v' in qs:
-        video_id = qs['v'][0][0:11]
+
+        if 'v' in qs:
+            video_id = qs['v'][0][0:11]
 
     # http://www.youtube.com/v/taaSlWjKdDY
     # http://www.youtube.com/e/NO00y65njH0
