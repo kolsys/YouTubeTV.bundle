@@ -59,6 +59,13 @@ ICONS = {
     'categories': R('q_ic_drawer_mix_normal.png'),
     'options': R('api_ic_options.png'),
     'suggestions': R('ic_edit_suggestion.png'),
+    'remove': R('ic_offline_dialog_remove.png'),
+}
+
+YT_EDITABLE = {
+    'watchLater': L('watchLater'),
+    'likes': L('I like this'),
+    'favorites': L('Add to favorites'),
 }
 
 ###############################################################################
@@ -210,7 +217,7 @@ def VideoView(url):
 
 
 @route(PREFIX + '/video/info')
-def VideoInfo(vid):
+def VideoInfo(vid, pl_item_id=None):
 
     oc = ObjectContainer()
     res = ApiGetVideos(ids=[vid])
@@ -245,15 +252,18 @@ def VideoInfo(vid):
         thumb=ICONS['suggestions'],
     ))
 
-    for key, title in {
-        'watchLater': L('watchLater'),
-        'likes': L('I like this'),
-        'favorites': L('Add to favorites'),
-    }.items():
+    for key, title in YT_EDITABLE.items():
         oc.add(DirectoryObject(
             key=Callback(PlaylistAdd, aid=item['id'], key=key),
             title=u'%s' % title,
             thumb=ICONS[key],
+        ))
+
+    if pl_item_id:
+        oc.add(DirectoryObject(
+            key=Callback(PlaylistRemove, pl_item_id=pl_item_id),
+            title=u'%s' % L('Remove from playlist'),
+            thumb=ICONS['remove'],
         ))
 
     return oc
@@ -261,15 +271,12 @@ def VideoInfo(vid):
 
 @route(PREFIX + '/channels')
 def Channels(oid, title, offset=None):
-    res = ApiRequest(
-        'channels',
-        ApiGetParams(
-            categoryId=oid,
-            hl=GetRegion(),
-            limit=Prefs['items_per_page'],
-            offset=offset
-        )
-    )
+    res = ApiRequest('channels', ApiGetParams(
+        categoryId=oid,
+        hl=GetRegion(),
+        limit=Prefs['items_per_page'],
+        offset=offset
+    ))
 
     if not res or not len(res['items']):
         return NoContents()
@@ -336,11 +343,10 @@ def Channel(oid, title):
 @route(PREFIX + '/categories')
 def Categories(title, c_type):
     locale = GetRegion()
-    res = ApiRequest('%sCategories' % c_type, {
-        'part': 'snippet',
-        'regionCode': locale,
-        'hl': locale,
-    })
+    res = ApiRequest('%sCategories' % c_type, ApiGetParams(
+        regionCode=locale,
+        hl=locale
+    ))
 
     if not res or not len(res['items']):
         return NoContents()
@@ -429,7 +435,7 @@ def Playlists(uid, title, offset=None):
 
 
 @route(PREFIX + '/playlist')
-def Playlist(oid, title, offset=None):
+def Playlist(oid, title, can_edit=False, offset=None):
     res = ApiRequest('playlistItems', ApiGetParams(
         part='contentDetails',
         playlistId=oid,
@@ -445,11 +451,16 @@ def Playlist(oid, title, offset=None):
         replace_parent=bool(offset)
     )
 
-    ids = []
+    ids = {}
     for item in res['items']:
-        ids.append(item['contentDetails']['videoId'])
+        ids[item['contentDetails']['videoId']] = item['id']
 
-    AddVideos(oc, ApiGetVideos(ids=ids), extended=Prefs['playlists_extened'])
+    AddVideos(
+        oc,
+        ApiGetVideos(ids=ids.keys()),
+        extended=Prefs['playlists_extened'],
+        pl_map=ids if can_edit and can_edit != 'False' else {}
+    )
 
     if 'nextPageToken' in res:
         oc.add(NextPageObject(
@@ -475,7 +486,7 @@ def PlaylistAdd(aid, key=None, oid=None, a_type='video'):
     if not oid:
         return ErrorMessage()
 
-    res = ApiRequest('playlistItems', {'part': 'snippet'}, {
+    res = ApiRequest('playlistItems', {'part': 'snippet'}, data={
         'snippet': {
             'playlistId': oid,
             'resourceId': {
@@ -488,10 +499,14 @@ def PlaylistAdd(aid, key=None, oid=None, a_type='video'):
     if not res:
         return ErrorMessage()
 
-    return ObjectContainer(
-        header=u'%s' % L('Success'),
-        message=u'%s' % L('Action complete')
-    )
+    return SuccessMessage()
+
+
+def PlaylistRemove(pl_item_id):
+    if ApiRequest('playlistItems', {'id': pl_item_id}, rmethod='DELETE'):
+        return SuccessMessage()
+
+    return ErrorMessage()
 
 
 @route(PREFIX + '/subscriptions')
@@ -503,7 +518,7 @@ def Subscriptions(uid, title, offset=None):
     return AddSubscriptions(oc, uid=uid, offset=offset)
 
 
-def AddVideos(oc, res, title=None, extended=False):
+def AddVideos(oc, res, title=None, extended=False, pl_map={}):
     if not res or not len(res['items']):
         return oc
 
@@ -515,8 +530,9 @@ def AddVideos(oc, res, title=None, extended=False):
         summary = u'%s\n%s' % (snippet['channelTitle'], snippet['description'])
 
         if extended:
+            pl_item_id = pl_map[item['id']] if item['id'] in pl_map else None
             oc.add(DirectoryObject(
-                key=Callback(VideoInfo, vid=item['id']),
+                key=Callback(VideoInfo, vid=item['id'], pl_item_id=pl_item_id),
                 title=u'%s' % snippet['title'],
                 summary=summary,
                 thumb=GetThumbFromSnippet(snippet),
@@ -556,7 +572,8 @@ def AddSystemPlaylists(oc, uid, types=None):
                 key=Callback(
                     Playlist,
                     oid=items[key],
-                    title=L(key)
+                    title=L(key),
+                    can_edit=uid == 'me' and key in YT_EDITABLE
                 ),
                 title=u'%s' % L(key),
                 thumb=ICONS[key] if key in ICONS else None,
@@ -584,10 +601,11 @@ def AddPlaylists(oc, uid, offset=None):
                     key=Callback(
                         Playlist,
                         oid=oid,
-                        title=item['title']
+                        title=item['localized']['title'],
+                        can_edit=uid == 'me'
                     ),
-                    title=u'%s' % item['title'],
-                    summary=u'%s' % item['description'],
+                    title=u'%s' % item['localized']['title'],
+                    summary=u'%s' % item['localized']['description'],
                     thumb=GetThumbFromSnippet(item),
                 ))
 
@@ -759,6 +777,13 @@ def NoContents():
     )
 
 
+def SuccessMessage():
+    return ObjectContainer(
+        header=u'%s' % L('Success'),
+        message=u'%s' % L('Action complete')
+    )
+
+
 def ErrorMessage():
     return ObjectContainer(
         header=u'%s' % L('Error'),
@@ -812,25 +837,40 @@ def ApiGetSystemPlayLists(uid):
     return {}
 
 
-def ApiRequest(method, params, data=None):
+def ApiRequest(method, params, data=None, rmethod=None):
     if not CheckToken():
         return None
 
     params['access_token'] = Dict['access_token']
 
+    is_change = data or rmethod == 'DELETE'
+
     try:
-        res = JSON.ObjectFromString(HTTP.Request(
+        res = HTTP.Request(
             'https://www.googleapis.com/youtube/%s/%s?%s' % (
                 YT_VERSION,
                 method,
                 urlencode(params)
             ),
             headers={'Content-Type': 'application/json; charset=UTF-8'},
-            data=None if not data else JSON.StringFromObject(data)
-        ).content)
-        if 'error' in res:
-            return None
+            data=None if not data else JSON.StringFromObject(data),
+            method=rmethod,
+            cacheTime=0 if is_change else CACHE_1HOUR
+        ).content
+    except Exception as e:
+        Log.Debug(str(e))
+        return None
+
+    if is_change:
+        HTTP.ClearCache()
+        return True
+
+    try:
+        res = JSON.ObjectFromString(res)
     except:
+        return None
+
+    if 'error' in res:
         return None
 
     return res

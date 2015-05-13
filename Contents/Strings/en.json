@@ -41,5 +41,6 @@
 	"Extended video info in Search": "Extended video info in Search",
 	"Update available: %s": "Update available: %s",
 	"Install latest version of the channel.": "Install latest version of the channel.",
-	"Channel updated to version %s": "Channel updated to version %s"
+	"Channel updated to version %s": "Channel updated to version %s",
+	"Remove from playlist": "Remove from playlist"
 }
