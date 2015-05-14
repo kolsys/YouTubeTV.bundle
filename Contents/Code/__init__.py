@@ -451,15 +451,20 @@ def Playlist(oid, title, can_edit=False, offset=None):
         replace_parent=bool(offset)
     )
 
-    ids = {}
+    ids = []
+    pl_map = {}
+    can_edit = can_edit and can_edit != 'False'
+
     for item in res['items']:
-        ids[item['contentDetails']['videoId']] = item['id']
+        ids.append(item['contentDetails']['videoId'])
+        if can_edit:
+            pl_map[item['contentDetails']['videoId']] = item['id']
 
     AddVideos(
         oc,
-        ApiGetVideos(ids=ids.keys()),
+        ApiGetVideos(ids=ids),
         extended=Prefs['playlists_extened'],
-        pl_map=ids if can_edit and can_edit != 'False' else {}
+        pl_map=pl_map
     )
 
     if 'nextPageToken' in res:
