@@ -41,5 +41,6 @@
 	"Extended video info in Search": "Mer videoinformation i Sök",
 	"Update available: %s": "Uppdatering tillgänglig: %s",
 	"Install latest version of the channel.": "Installera senaste versionen av kanalen.",
-	"Channel updated to version %s": "Kanalen uppdaterad till version %s"
+	"Channel updated to version %s": "Kanalen uppdaterad till version %s",
+	"Remove from playlist": "Ta bort från spellista"
 }
