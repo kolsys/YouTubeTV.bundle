@@ -273,7 +273,7 @@ def VideoInfo(vid, pl_item_id=None):
 def Channels(oid, title, offset=None):
     res = ApiRequest('channels', ApiGetParams(
         categoryId=oid,
-        hl=GetRegion(),
+        hl=GetLanguage(),
         limit=Prefs['items_per_page'],
         offset=offset
     ))
@@ -342,10 +342,9 @@ def Channel(oid, title):
 
 @route(PREFIX + '/categories')
 def Categories(title, c_type):
-    locale = GetRegion()
     res = ApiRequest('%sCategories' % c_type, ApiGetParams(
-        regionCode=locale,
-        hl=locale
+        regionCode=GetRegion(),
+        hl=GetLanguage()
     ))
 
     if not res or not len(res['items']):
@@ -593,7 +592,7 @@ def AddPlaylists(oc, uid, offset=None):
         uid=uid,
         limit=GetLimitForOC(oc),
         offset=offset,
-        hl=GetRegion()
+        hl=GetLanguage()
     ))
 
     if res:
@@ -807,6 +806,10 @@ def GetRegion():
     return Prefs['region'].split('/')[1]
 
 
+def GetLanguage():
+    return Prefs['language'].split('/')[1]
+
+
 def GetLimitForOC(oc):
     ret = int(Prefs['items_per_page'])-len(oc)
     return 8 if ret <= 0 else ret
@@ -822,7 +825,7 @@ def GetThumbFromSnippet(snippet):
 def ApiGetVideos(ids=[], title=None, extended=False, **kwargs):
     return ApiRequest('videos', ApiGetParams(
         part='snippet,contentDetails',
-        hl=GetRegion(),
+        hl=GetLanguage(),
         id=','.join(ids),
         **kwargs
     ))
@@ -831,7 +834,7 @@ def ApiGetVideos(ids=[], title=None, extended=False, **kwargs):
 def ApiGetSystemPlayLists(uid):
     res = ApiRequest('channels', ApiGetParams(
         part='contentDetails',
-        hl=GetRegion(),
+        hl=GetLanguage(),
         uid=uid,
         id=uid if uid != 'me' else None
     ))
