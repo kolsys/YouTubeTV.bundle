@@ -25,7 +25,7 @@
 	"More playlists": "Еще плейлисты",
 	"More subscriptions": "Еще подписки",
 	"Complete authorization": "Завершить авторизацию",
-	"Service temporary unavaliable": "Сервис временно недоступен",
+	"Service temporarily unavailable": "Сервис временно недоступен",
 	"Preferred Region for Videos and channels": "Ваш регион",
 	"Preferred language for Videos and channels": "Ваш язык",
 	"Search playlists": "Искать плейлисты",
@@ -43,5 +43,7 @@
 	"Update available: %s": "Доступно обновление: %s",
 	"Install latest version of the channel.": "Установить последнюю версию плагина.",
 	"Channel updated to version %s": "Плагин обновлен до версии %s",
-	"Remove from playlist": "Удалить из плейлиста"
+	"Remove from playlist": "Удалить из плейлиста",
+	"Action complete": "Действие выполнено",
+	"An error has occurred": "Произошла ошибка"
 }

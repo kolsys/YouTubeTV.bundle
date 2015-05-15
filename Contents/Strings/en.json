@@ -25,7 +25,7 @@
 	"More playlists": "More playlists",
 	"More subscriptions": "More subscriptions",
 	"Complete authorization": "Complete authorization",
-	"Service temporary unavaliable": "Service temporarily unavailable",
+	"Service temporarily unavailable": "Service temporarily unavailable",
 	"Preferred Region for Videos and channels": "Preferred Region for Videos and channels",
 	"Preferred language for Videos and channels": "Preferred language for Videos and channels",
 	"Search playlists": "Search playlists",
@@ -43,5 +43,7 @@
 	"Update available: %s": "Update available: %s",
 	"Install latest version of the channel.": "Install latest version of the channel.",
 	"Channel updated to version %s": "Channel updated to version %s",
-	"Remove from playlist": "Remove from playlist"
+	"Remove from playlist": "Remove from playlist",
+	"Action complete": "Action complete",
+	"An error has occurred": "An error has occurred"
 }

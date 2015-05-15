@@ -766,7 +766,7 @@ def Authorization():
 
     return ObjectContainer(
         header=u'%s' % L('Error'),
-        message=u'%s' % L('Service temporary unavaliable')
+        message=u'%s' % L('Service temporarily unavailable')
     )
 
 
