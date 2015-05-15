@@ -27,6 +27,7 @@
 	"Complete authorization": "Færdigør godkendelse",
 	"Service temporarily unavailable": "Service er midlertidigt ude af drift",
 	"Preferred Region for Videos and channels": "Foretrukken region for Videoer og kanaler",
+	"Preferred language for Videos and channels": "Fortrukken sprog for videoer og kanaler",
 	"Search playlists": "Søg afspille liste",
 	"Search channels": "Søg kanaler",
 	"Browse channels": "Gennemse kanaler",
@@ -41,5 +42,8 @@
 	"Extended video info in Search": "Udvidet video info i søgninger",
 	"Update available: %s": "Opdatering tilgængelig: %s",
 	"Install latest version of the channel.": "Installer seneste version af denne kanal.",
-	"Channel updated to version %s": "Kanalen er opdateret til version %s"
+	"Channel updated to version %s": "Kanalen er opdateret til version %s",
+	"Remove from playlist": "Fjern fra afspille kø",
+	"Action complete": "Action complete",
+	"An error has occurred": "An error has occurred"
 }
