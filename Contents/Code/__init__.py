@@ -61,6 +61,7 @@ ICONS = {
     'suggestions': R('ic_edit_suggestion.png'),
     'remove': R('ic_offline_dialog_remove.png'),
     'next': R('q_ic_drawer_expand_normal.png'),
+    'offline': R('ic_offline_disabled.png'),
 }
 
 YT_EDITABLE = {
@@ -105,9 +106,12 @@ def ValidatePrefs():
 ###############################################################################
 
 @handler(PREFIX, TITLE, thumb=ICON)
-def MainMenu(complete=False):
+def MainMenu(complete=False, offline=False):
 
     oc = ObjectContainer(title2=TITLE, no_cache=True, replace_parent=False)
+    if offline:
+        ResetToken()
+
     if not CheckToken():
         oc.add(DirectoryObject(
             key=Callback(Authorization),
@@ -342,6 +346,11 @@ def Channel(oid, title):
     # Add standart menu
     AddSystemPlaylists(oc, oid)
     if oid == 'me':
+        oc.add(DirectoryObject(
+            key=Callback(MainMenu, offline=True),
+            title=u'%s' % L('Sign out'),
+            thumb=ICONS['offline'],
+        ))
         return oc
 
     oc.add(DirectoryObject(
@@ -782,7 +791,8 @@ def Authorization():
                     key=Callback(MainMenu, complete=True),
                     title=u'%s' % L('Authorize'),
                     summary=u'%s' % L('Complete authorization'),
-                ),            ]
+                ),
+            ]
         )
         return oc
 
@@ -950,6 +960,14 @@ def CheckToken():
             return True
 
     return False
+
+
+def ResetToken():
+    del Dict['access_token']
+    del Dict['refresh_token']
+    del Dict['device_code']
+    Dict.Reset()
+    Dict.Save()
 
 
 def OAuthRequest(params, rtype='token'):

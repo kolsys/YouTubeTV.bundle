@@ -45,5 +45,6 @@
 	"Channel updated to version %s": "Плагин обновлен до версии %s",
 	"Remove from playlist": "Удалить из плейлиста",
 	"Action complete": "Действие выполнено",
-	"An error has occurred": "Произошла ошибка"
+	"An error has occurred": "Произошла ошибка",
+	"Sign out": "Выйти",
 }

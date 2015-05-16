@@ -45,5 +45,6 @@
 	"Channel updated to version %s": "Channel updated to version %s",
 	"Remove from playlist": "Remove from playlist",
 	"Action complete": "Action complete",
-	"An error has occurred": "An error has occurred"
+	"An error has occurred": "An error has occurred",
+	"Sign out": "Sign out",
 }
