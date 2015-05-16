@@ -12,6 +12,12 @@
         "default": "false",
     },
     {
+        "id": "category_extened",
+        "type": "bool",
+        "label": "Extended video info in Categories",
+        "default": "true",
+    },
+    {
         "id": "search_extened",
         "type": "bool",
         "label": "Extended video info in Search",

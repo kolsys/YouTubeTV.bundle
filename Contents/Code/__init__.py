@@ -84,6 +84,7 @@ Plugin.AddViewGroup(
 
 def Start():
     HTTP.CacheTime = CACHE_1HOUR
+    ValidatePrefs()
 
 
 def ValidatePrefs():
@@ -420,7 +421,7 @@ def Category(title, oid=0, offset=None):
         regionCode=GetRegion(),
         videoCategoryId=oid
     )
-    AddVideos(oc, res)
+    AddVideos(oc, res, extended=Prefs['category_extened'])
 
     if not len(oc):
         return NoContents()
