@@ -60,6 +60,7 @@ ICONS = {
     'options': R('api_ic_options.png'),
     'suggestions': R('ic_edit_suggestion.png'),
     'remove': R('ic_offline_dialog_remove.png'),
+    'next': R('q_ic_drawer_expand_normal.png'),
 }
 
 YT_EDITABLE = {
@@ -82,6 +83,7 @@ Plugin.AddViewGroup(
 
 def Start():
     HTTP.CacheTime = CACHE_1HOUR
+    Locale.DefaultLocale = GetLanguage()
 
 
 ###############################################################################
@@ -205,7 +207,8 @@ def MySubscriptions(offset=None):
                 MySubscriptions,
                 offset=offset,
             ),
-            title=u'%s' % L('Next page')
+            title=u'%s' % L('Next page'),
+            thumb=ICONS['next']
         ))
 
     return oc
@@ -309,7 +312,8 @@ def Channels(oid, title, offset=None):
                 title=title,
                 offset=res['nextPageToken'],
             ),
-            title=u'%s' % L('Next page')
+            title=u'%s' % L('Next page'),
+            thumb=ICONS['next']
         ))
 
     return oc
@@ -406,7 +410,8 @@ def Category(title, oid=0, offset=None):
                 oid=oid,
                 offset=res['nextPageToken'],
             ),
-            title=u'%s' % L('Next page')
+            title=u'%s' % L('Next page'),
+            thumb=ICONS['next']
         ))
 
     return oc
@@ -474,7 +479,8 @@ def Playlist(oid, title, can_edit=False, offset=None):
                 oid=oid,
                 offset=res['nextPageToken'],
             ),
-            title=u'%s' % L('Next page')
+            title=u'%s' % L('Next page'),
+            thumb=ICONS['next']
         ))
 
     return oc
@@ -621,7 +627,8 @@ def AddPlaylists(oc, uid, offset=None):
                     title=oc.title2,
                     offset=res['nextPageToken'],
                 ),
-                title=u'%s' % L('More playlists')
+                title=u'%s' % L('More playlists'),
+                thumb=ICONS['next']
             ))
 
     if not len(oc):
@@ -653,7 +660,6 @@ def AddSubscriptions(oc, uid, offset=None):
                     thumb=GetThumbFromSnippet(item),
                 ))
 
-
         if 'nextPageToken' in res:
             oc.add(NextPageObject(
                 key=Callback(
@@ -662,7 +668,8 @@ def AddSubscriptions(oc, uid, offset=None):
                     title=oc.title2,
                     offset=res['nextPageToken'],
                 ),
-                title=u'%s' % L('More subscriptions')
+                title=u'%s' % L('More subscriptions'),
+                thumb=ICONS['next']
             ))
 
     if not len(oc):
@@ -725,7 +732,8 @@ def Search(query, title=L('Search'), s_type='video', offset=0, **kwargs):
                 s_type=s_type,
                 offset=res['nextPageToken'],
             ),
-            title=u'%s' % L('Next page')
+            title=u'%s' % L('Next page'),
+            thumb=ICONS['next']
         ))
 
     return oc

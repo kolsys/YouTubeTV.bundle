@@ -14,7 +14,7 @@
 	<key>CFBundleSignature</key>
 	<string>hook</string>
 	<key>CFBundleVersion</key>
-	<string>2.2</string>
+	<string>2.3</string>
 
 	<key>PlexPluginVersionUrl</key>
 	<string>https://api.github.com/repos/kolsys/YouTubeTV.bundle/releases/latest</string>

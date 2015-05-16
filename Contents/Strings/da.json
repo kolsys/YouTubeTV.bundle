@@ -44,6 +44,6 @@
 	"Install latest version of the channel.": "Installer seneste version af denne kanal.",
 	"Channel updated to version %s": "Kanalen er opdateret til version %s",
 	"Remove from playlist": "Fjern fra afspille kø",
-	"Action complete": "Action complete",
-	"An error has occurred": "An error has occurred"
+	"Action complete": "Opgave fuldført",
+	"An error has occurred": "Der er opstået en fejl"
 }
