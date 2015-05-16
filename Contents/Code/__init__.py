@@ -83,8 +83,19 @@ Plugin.AddViewGroup(
 
 def Start():
     HTTP.CacheTime = CACHE_1HOUR
-    Locale.DefaultLocale = GetLanguage()
 
+
+def ValidatePrefs():
+    loc = GetLanguage()
+    if Core.storage.file_exists(Core.storage.abs_path(
+        Core.storage.join_path(
+            Core.bundle_path,
+            'Contents',
+            'Strings',
+            '%s.json' % loc
+        )
+    )):
+        Locale.DefaultLocale = GetLanguage()
 
 ###############################################################################
 # Video
