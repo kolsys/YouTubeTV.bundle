@@ -96,6 +96,9 @@ def ValidatePrefs():
         )
     )):
         Locale.DefaultLocale = GetLanguage()
+    else:
+        Locale.DefaultLocale = 'en-us'
+
 
 ###############################################################################
 # Video
