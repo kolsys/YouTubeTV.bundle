@@ -39,11 +39,13 @@
 	"Add to favorites": "Lägg till favoriter",
 	"Extended video info in My subscriptions": "Mer videoinformation i Mina prenumerationer",
 	"Extended video info in Playlists": "Mer videoinformation i Spellistor",
+	"Extended video info in Categories": "Mer videoinformation i Kategorier",
 	"Extended video info in Search": "Mer videoinformation i Sök",
 	"Update available: %s": "Uppdatering tillgänglig: %s",
 	"Install latest version of the channel.": "Installera senaste versionen av kanalen.",
 	"Channel updated to version %s": "Kanalen uppdaterad till version %s",
 	"Remove from playlist": "Ta bort från spellista",
 	"Action complete": "Åtgärd genomförd",
-	"An error has occurred": "Ett fel har inträffat"
+	"An error has occurred": "Ett fel har inträffat",
+	"Sign out": "Logga ut"
 }

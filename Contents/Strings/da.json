@@ -39,11 +39,13 @@
 	"Add to favorites": "Tilføj til fortrukne",
 	"Extended video info in My subscriptions": "Udvidet video info i mine abbonementer",
 	"Extended video info in Playlists": "Udvidet video info i afspille lister",
+	"Extended video info in Categories": "Udvidet video information for kategorier",
 	"Extended video info in Search": "Udvidet video info i søgninger",
 	"Update available: %s": "Opdatering tilgængelig: %s",
 	"Install latest version of the channel.": "Installer seneste version af denne kanal.",
 	"Channel updated to version %s": "Kanalen er opdateret til version %s",
 	"Remove from playlist": "Fjern fra afspille kø",
 	"Action complete": "Opgave fuldført",
-	"An error has occurred": "Der er opstået en fejl"
+	"An error has occurred": "Der er opstået en fejl",
+	"Sign out": "Log ud"
 }

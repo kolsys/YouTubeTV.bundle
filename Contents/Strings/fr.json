@@ -39,11 +39,13 @@
 	"Add to favorites": "Ajouter aux favoris",
 	"Extended video info in My subscriptions": "Informations étendues pour les vidéos de mes abonnements",
 	"Extended video info in Playlists": "Informations étendues pour les vidéos des listes de lecture",
+	"Extended video info in Categories": "Informations étendues pour les vidéos des catégories",
 	"Extended video info in Search": "Informations étendues pour les vidéos de mes recherches",
 	"Update available: %s": "Mise à jour disponible : %s",
 	"Install latest version of the channel.": "Installer la dernière version de la chaîne.",
 	"Channel updated to version %s": "Chaîne mise à jour vers la version %s",
 	"Remove from playlist": "Supprimer de la liste de lecture",
 	"Action complete": "Action terminée",
-	"An error has occurred": "Une erreur est survenue"
+	"An error has occurred": "Une erreur est survenue",
+	"Sign out": "Déconnexion"
 }

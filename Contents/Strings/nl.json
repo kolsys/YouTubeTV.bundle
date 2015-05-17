@@ -39,11 +39,13 @@
 	"Add to favorites": "Toevoegen aan favorieten",
 	"Extended video info in My subscriptions": "Uitgebreide video info in Mijn abonnementen",
 	"Extended video info in Playlists": "Extended video info in Afspeellijsten",
+	"Extended video info in Categories": "Extended video info in Categories",
 	"Extended video info in Search": "Extended video info in Zoekresultaten",
 	"Update available: %s": "Update beschikbaar: %s",
 	"Install latest version of the channel.": "Installeer meest recente versie van dit kanaal",
 	"Channel updated to version %s": "Kanaal is geüpdatet naar versie %s",
 	"Remove from playlist": " Verwijder uit afspeellijst",
 	"Action complete": "Actie voltooid",
-	"An error has occurred": "Er is een fout opgetreden"
+	"An error has occurred": "Er is een fout opgetreden",
+	"Sign out": "Sign out"
 }
