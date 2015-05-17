@@ -62,6 +62,7 @@ ICONS = {
     'remove': R('ic_offline_dialog_remove.png'),
     'next': R('q_ic_drawer_expand_normal.png'),
     'offline': R('ic_offline_disabled.png'),
+    'search': R('ic_search.png'),
 }
 
 YT_EDITABLE = {
@@ -163,7 +164,8 @@ def MainMenu(complete=False, offline=False):
             s_type='video',
             title=u'%s' % L('Search Video')
         ),
-        title=u'%s' % L('Search'), prompt=u'%s' % L('Search Video')
+        title=u'%s' % L('Search'), prompt=u'%s' % L('Search Video'),
+        thumb=ICONS['search']
     ))
 
     return AddSubscriptions(oc, uid='me')
@@ -390,7 +392,8 @@ def Categories(title, c_type):
                 s_type='channel',
                 title=u'%s' % L('Search channels')
             ),
-            title=u'%s' % L('Search'), prompt=u'%s' % L('Search channels')
+            title=u'%s' % L('Search'), prompt=u'%s' % L('Search channels'),
+            thumb=ICONS['search']
         ))
     else:
         c_callback = Category
@@ -456,7 +459,8 @@ def Playlists(uid, title, offset=None):
                 s_type='playlist',
                 title=u'%s' % L('Search playlists')
             ),
-            title=u'%s' % L('Search'), prompt=u'%s' % L('Search playlists')
+            title=u'%s' % L('Search'), prompt=u'%s' % L('Search playlists'),
+            thumb=ICONS['search']
         ))
 
     return AddPlaylists(oc, uid=uid, offset=offset)
