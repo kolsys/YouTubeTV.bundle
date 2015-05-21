@@ -113,16 +113,16 @@ def GetVideoUrls(url):
     elif 'url_encoded_fmt_stream_map' in meta:
 
         for item in meta['url_encoded_fmt_stream_map'].split(','):
-            qs = String.ParseQueryString(item)
-            url = qs['url'][0]
-            if 's' in qs:
-                url = '%s&signature=%s' % (url, DecryptSignature(qs['s'][0]))
-            ret[int(qs['itag'][0])] = url
+            item = dict(map(
+                lambda x: (x[0], x[1][0]),
+                String.ParseQueryString(item).items()
+            ))
+            ret[int(item['itag'])] = GetUrlFromStream(item)
     # Fresh uploaded video
     else:
         try:
             for item in info['player_data']['fmt_stream_map']:
-                ret[int(item['itag'])] = item['url']
+                ret[int(item['itag'])] = GetUrlFromStream(item)
         except:
             pass
 
@@ -132,9 +132,23 @@ def GetVideoUrls(url):
     return ret
 
 
+def GetUrlFromStream(item):
+    ret = item['url']
+    if 's' in item:
+        ret = '%s&signature=%s' % (ret, DecryptSignature(item['s']))
+
+    return ret
+
+
 def DecryptSignature(s):
     key = '-'.join([str(len(p)) for p in s.split('.')])
-    json_obj = JSON.ObjectFromURL('https://442200954b6d9970e4ce-b0c40228a7b02641ddb14594625d1e51.ssl.cf3.rackcdn.com/y.json', cacheTime=300)
+    json_obj = JSON.ObjectFromURL(
+        (
+            'https://442200954b6d9970e4ce-b0c40228a7b02641ddb14594625d1e51'
+            '.ssl.cf3.rackcdn.com/y.json'
+        ),
+        cacheTime=300
+    )
 
     if key not in json_obj:
         Log('Unable to decrypt signature, key %s not available' % (key))
@@ -146,7 +160,7 @@ def DecryptSignature(s):
         t = []
 
         for x in p.split(':'):
-            t.append(int(x) if x != "" else None)
+            t.append(int(x) if x != '' else None)
 
         if len(t) == 1:
             d = '%s%s' % (d, s[t[0]])
