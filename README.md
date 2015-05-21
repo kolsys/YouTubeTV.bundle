@@ -22,7 +22,7 @@ Features
 * Does not require Google login and password
 * Navigation like YouTube Apps
 * Pagination and regional settings
-* Russian, Swedish, Danish, Dutch, French and French (Belgium) localization
+* Russian, Swedish, Danish, Dutch, French, French (Belgium), Hungarian (Hungary), Italian, Spanish (partial) localization
 * YouTube content localization by region preferences
 * "Like" and "Watch later" video functions including edit function
 * Update function
