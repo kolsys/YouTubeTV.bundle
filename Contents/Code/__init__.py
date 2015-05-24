@@ -706,7 +706,11 @@ def AddSubscriptions(oc, uid, offset=None):
     return oc
 
 
-def Search(query, title=L('Search'), s_type='video', offset=0, **kwargs):
+def Search(query=None, title=L('Search'), s_type='video', offset=0, **kwargs):
+
+    if not query:
+        return NoContents()
+
     is_video = s_type == 'video'
     res = ApiRequest('search', ApiGetParams(
         part='id' if is_video else 'snippet',
