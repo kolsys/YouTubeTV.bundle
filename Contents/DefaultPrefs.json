@@ -37,6 +37,13 @@
         "default": "16",
     },
     {
+        "id": "subscriptions_order",
+        "type": "enum",
+        "label": "Subscriptions list sorting order",
+        "values": ["Relevance", "Alphabetical"],
+        "default": "Relevance",
+    },
+    {
         "id": "region",
         "type": "enum",
         "label": "Preferred Region for Videos and channels",

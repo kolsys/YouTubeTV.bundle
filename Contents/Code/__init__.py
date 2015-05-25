@@ -670,7 +670,8 @@ def AddSubscriptions(oc, uid, offset=None):
     res = ApiRequest('subscriptions', ApiGetParams(
         uid=uid,
         limit=GetLimitForOC(oc),
-        offset=offset, order='relevance'
+        offset=offset,
+        order=str(Prefs['subscriptions_order']).lower()
     ))
 
     if res:
