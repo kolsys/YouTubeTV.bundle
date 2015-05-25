@@ -27,7 +27,7 @@
 	"Complete authorization": "Finaliser l\'autorisation",
 	"Service temporarily unavailable": "Service temporairement indisponible",
 	"Preferred Region for Videos and channels": "Région de prédilection pour les vidéos et les chaînes",
-	"Preferred language for Videos and channels": "Langue de prédilection pour les vidéos et les chaînes",
+	"Preferred language for Videos and channels": "Langue de préférence pour les vidéos et les chaînes",
 	"Search playlists": "Rechercher dans les listes de lecture",
 	"Search channels": "Rechercher dans les chaînes",
 	"Browse channels": "Parcourir les chaînes",
@@ -47,5 +47,6 @@
 	"Remove from playlist": "Supprimer de la liste de lecture",
 	"Action complete": "Action terminée",
 	"An error has occurred": "Une erreur est survenue",
-	"Sign out": "Déconnexion"
+	"Sign out": "Déconnexion",
+	"Subscriptions list sorting order": "Subscriptions list sorting order"
 }
