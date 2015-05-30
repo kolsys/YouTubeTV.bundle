@@ -127,6 +127,7 @@ def MetadataObjectForURL(url):
 
     return VideoClipObject(
         title=u'%s' % item['video']['title'],
+        rating_key=url.split('&')[0],
         summary=u'%s\n%s' % (
             item['video']['public_name'],
             item['video']['description']

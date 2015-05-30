@@ -236,8 +236,11 @@ def MySubscriptions(offset=None):
 
 
 @route(PREFIX + '/video/view')
-def VideoView(url):
-    return URLService.MetadataObjectForURL(url=url, in_container=True)
+def VideoView(vid):
+    return URLService.MetadataObjectForURL(
+        url=Video.GetServiceURL(vid, Dict['access_token']),
+        in_container=True
+    )
 
 
 @route(PREFIX + '/video/info')
@@ -577,10 +580,9 @@ def AddVideos(oc, res, title=None, extended=False, pl_map={}):
                 duration=duration,
             ))
         else:
-            url = Video.GetServiceURL(item['id'])
             oc.add(VideoClipObject(
-                key=Callback(VideoView, url=url),
-                rating_key=url,
+                key=Callback(VideoView, vid=item['id']),
+                rating_key=Video.GetServiceURL(item['id']),
                 title=u'%s' % snippet['title'] if title is None else title,
                 summary=summary,
                 thumb=GetThumbFromSnippet(snippet),
@@ -588,7 +590,9 @@ def AddVideos(oc, res, title=None, extended=False, pl_map={}):
                 originally_available_at=Datetime.ParseDate(
                     snippet['publishedAt']
                 ).date(),
-                items=URLService.MediaObjectsForURL(url)
+                items=URLService.MediaObjectsForURL(
+                    Video.GetServiceURL(item['id'], Dict['access_token'])
+                )
             ))
 
     return oc

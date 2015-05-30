@@ -45,8 +45,12 @@ USER_AGENT = (
 )
 
 
-def GetServiceURL(vid):
-    return 'http://tv.youtube.plugins.plex.com/%s' % vid
+def GetServiceURL(vid, token=''):
+    return 'http://tv.youtube.plugins.plex.com/%s%s%s' % (
+        vid,
+        '&access_token=' if token else '',
+        token
+    )
 
 
 def GetMetaUrlByServiceURL(url):
