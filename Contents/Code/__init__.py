@@ -709,7 +709,7 @@ def AddSubscriptions(oc, uid, offset=None):
 
 def Search(query=None, title=L('Search'), s_type='video', offset=0, **kwargs):
 
-    if not query:
+    if not query and not kwargs:
         return NoContents()
 
     is_video = s_type == 'video'
