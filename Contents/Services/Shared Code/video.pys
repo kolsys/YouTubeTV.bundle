@@ -45,11 +45,13 @@ USER_AGENT = (
 )
 
 
-def GetServiceURL(vid, token=''):
-    return 'http://tv.youtube.plugins.plex.com/%s%s%s' % (
+def GetServiceURL(vid, token='', hl=''):
+    return 'http://tv.youtube.plugins.plex.com/%s%s%s%s%s' % (
         vid,
         '&access_token=' if token else '',
-        token
+        token,
+        '&hl=' if hl else '',
+        hl
     )
 
 
@@ -142,6 +144,14 @@ def GetUrlFromStream(item):
         ret = '%s&signature=%s' % (ret, DecryptSignature(item['s']))
 
     return ret
+
+
+def GetFromMainContent(item, key):
+    try:
+        cont = item['video_main_content']['contents'][0]
+        return cont[key]['runs'][0]['text']
+    except:
+        return ''
 
 
 def CalculateOffset(position):
