@@ -669,16 +669,12 @@ def AddPlaylists(oc, uid, offset=None):
     return oc
 
 
-def AddSubscriptions(oc, uid, offset=0):
-
-    # TODO - temporary workaround while YT bug not fixed
-    offset = int(offset)
-    limit = GetLimitForOC(oc)
+def AddSubscriptions(oc, uid, offset=None):
 
     res = ApiRequest('subscriptions', ApiGetParams(
         uid=uid,
-        limit=limit,
-        offset=Video.CalculateOffset(offset),
+        limit=GetLimitForOC(oc),
+        offset=offset,
         order=str(Prefs['subscriptions_order']).lower()
     ))
 
@@ -697,13 +693,8 @@ def AddSubscriptions(oc, uid, offset=0):
                     thumb=GetThumbFromSnippet(item),
                 ))
 
-        # TODO - temporary workaround while YT bug not fixed
-        # if 'nextPageToken' in res:
-        #     offset = res['nextPageToken']
-        offset += limit
-        if 'pageInfo' in res and (
-            res['pageInfo']['totalResults'] > offset
-        ):
+        if 'nextPageToken' in res:
+            offset = res['nextPageToken']
             oc.add(NextPageObject(
                 key=Callback(
                     Subscriptions,
