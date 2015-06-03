@@ -98,7 +98,7 @@ def ValidatePrefs():
             '%s.json' % loc
         )
     )):
-        Locale.DefaultLocale = GetLanguage()
+        Locale.DefaultLocale = loc
     else:
         Locale.DefaultLocale = 'en-us'
 
