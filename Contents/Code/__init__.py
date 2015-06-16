@@ -196,11 +196,14 @@ def MySubscriptions(offset=None):
         return NoContents()
 
     if 'single_column_browse_results' in res:
-        res = res['single_column_browse_results']['tabs'][0]['content']
+        for item in res['single_column_browse_results']['tabs']:
+            if 'selected' in item and item['selected'] is True:
+                res = item['content']
+                break
     else:
         res = res['continuation_contents']
 
-    if not len(res['contents']):
+    if not 'contents' in res or not len(res['contents']):
         return NoContents()
 
     if 'continuations' in res:
