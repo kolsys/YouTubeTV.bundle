@@ -296,6 +296,30 @@ def VideoInfo(vid, pl_item_id=None):
             thumb=ICONS['remove'],
         ))
 
+    links = Video.ParseLinksFromDescription(item['snippet']['description'])
+    if len(links):
+        for (ext_title, url) in links:
+            try:
+                ext_vid = URLService.NormalizeURL(url)
+            except:
+                continue
+            if ext_vid is None:
+                continue
+
+            if 'playlist?' in ext_vid:
+                ext_vid = ext_vid[ext_vid.rfind('list=')+5:]
+                oc.add(DirectoryObject(
+                    key=Callback(Playlist, oid=ext_vid, title=ext_title),
+                    title=u'[*] %s' % ext_title
+                ))
+            else:
+                ext_vid = ext_vid[ext_vid.rfind('/')+1:]
+                oc.add(DirectoryObject(
+                    key=Callback(VideoInfo, vid=ext_vid),
+                    title=u'[*] %s' % ext_title,
+                    thumb='https://i.ytimg.com/vi/%s/hqdefault.jpg' % ext_vid
+                ))
+
     return oc
 
 

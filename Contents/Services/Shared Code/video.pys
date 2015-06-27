@@ -138,6 +138,19 @@ def GetVideoUrls(url):
     return ret
 
 
+def ParseLinksFromDescription(text):
+    re = Regex(
+        (
+            r'^(.+)[\s\n]*(https?://(?:www\.|m\.)?youtu(?:be\.com|\.be)/'
+            '(?!account(?:_|\?)?|artist(?:/|\?)|blog\?|categories\?|'
+            'channels\?|charts|embed/(?:__videoid__|videoseries\?)|p/|'
+            'profile\?|channel/|results\?|subscribe_widget|\?tab=).+)'
+        ),
+        Regex.MULTILINE
+    )
+    return re.findall(text)
+
+
 def GetUrlFromStream(item):
     ret = item['url']
     if 's' in item:
