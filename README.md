@@ -25,6 +25,7 @@ Features
 * Russian, Swedish, Danish, Dutch, French, French (Belgium), Hungarian, Italian, Spanish, German, Polish localization
 * YouTube content localization by region preferences
 * "Like" and "Watch later" video functions including edit function
+* Videos and playlists from videos description
 * Update function
 
 Installation
