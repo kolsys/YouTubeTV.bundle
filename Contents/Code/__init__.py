@@ -535,6 +535,7 @@ def Playlist(oid, title, can_edit=False, offset=None):
                 Playlist,
                 title=oc.title2,
                 oid=oid,
+                can_edit=can_edit,
                 offset=res['nextPageToken'],
             ),
             title=u'%s' % L('Next page'),
