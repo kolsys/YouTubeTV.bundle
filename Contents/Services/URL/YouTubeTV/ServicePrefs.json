@@ -1,0 +1,8 @@
+[
+    {
+        "id": "play_highest",
+        "type": "bool",
+        "label": "Always play highest quality",
+        "default": "false",
+    },
+]

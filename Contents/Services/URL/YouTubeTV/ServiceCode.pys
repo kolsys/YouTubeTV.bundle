@@ -155,6 +155,11 @@ def MetadataObjectForURL(url):
 
 
 def MediaObjectsForURL(url, definition='hd'):
+
+    definitions = Video.DEFINITIONS[definition]
+    if Prefs['play_highest']:
+        definitions = (Video.MAX_RESOLUTION,)
+
     return [
         MediaObject(
             parts=[
@@ -165,7 +170,7 @@ def MediaObjectsForURL(url, definition='hd'):
             video_codec=VideoCodec.H264,
             audio_codec=AudioCodec.AAC,
             optimized_for_streaming=True
-        ) for key in Video.DEFINITIONS[definition]
+        ) for key in definitions
     ]
 
 
