@@ -26,6 +26,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from datetime import timedelta
+from jsinterp import JSInterpreter
 
 DEFINITIONS = {
     'sd': (36, 18),
@@ -91,6 +92,10 @@ def MetaFromInfo(item):
 def GetVideoUrls(url):
     info = GetVideoData(url)
     meta = MetaFromInfo(info)
+    try:
+        player_url = info['swfcfg']['assets']['js']
+    except:
+        player_url = None
 
     ret = {}
     # Live stream
@@ -125,12 +130,12 @@ def GetVideoUrls(url):
                 lambda x: (x[0], x[1][0]),
                 String.ParseQueryString(item).items()
             ))
-            ret[int(item['itag'])] = GetUrlFromStream(item)
+            ret[int(item['itag'])] = GetUrlFromStream(item, player_url)
     # Fresh uploaded video
     else:
         try:
             for item in info['player_data']['fmt_stream_map']:
-                ret[int(item['itag'])] = GetUrlFromStream(item)
+                ret[int(item['itag'])] = GetUrlFromStream(item, player_url)
         except:
             pass
 
@@ -153,10 +158,10 @@ def ParseLinksFromDescription(text):
     return re.findall(text)
 
 
-def GetUrlFromStream(item):
+def GetUrlFromStream(item, player_url):
     ret = item['url']
-    if 's' in item:
-        ret = '%s&signature=%s' % (ret, DecryptSignature(item['s']))
+    if player_url and 's' in item:
+        ret = '%s&signature=%s' % (ret, DecryptSignature(item['s'], player_url))
 
     return ret
 
@@ -169,36 +174,35 @@ def GetFromMainContent(item, key):
         return ''
 
 
-def DecryptSignature(s):
-    key = '-'.join([str(len(p)) for p in s.split('.')])
-    json_obj = JSON.ObjectFromURL(
-        (
-            'https://442200954b6d9970e4ce-b0c40228a7b02641ddb14594625d1e51'
-            '.ssl.cf3.rackcdn.com/y.json'
-        ),
-        cacheTime=300
-    )
+def DecryptSignature(s, player_url):
+    """Turn the encrypted s field into a working signature"""
 
-    if key not in json_obj:
-        Log('Unable to decrypt signature, key %s not available' % (key))
-        raise Ex.MediaNotAvailable
+    try:  # hasattr workaround
+        len(DecryptSignature.cache)
+    except:
+        DecryptSignature.cache = {}
 
-    d = ''
+    def signature_cache_id(example_sig):
+        return '.'.join(str(len(part)) for part in example_sig.split('.'))
 
-    for p in json_obj[key]:
-        t = []
+    def parse_sig_js(jscode):
+        funcname = Regex('\.sig\|\|([a-zA-Z0-9$]+)\(').search(jscode).group(1)
+        jsi = JSInterpreter(jscode)
+        initial_function = jsi.extract_function(funcname)
+        return lambda s: initial_function([s])
 
-        for x in p.split(':'):
-            t.append(int(x) if x != '' else None)
+    if player_url.startswith('//'):
+        player_url = 'https:' + player_url
+    try:
+        player_id = (player_url, signature_cache_id(s))
+        if player_id not in DecryptSignature.cache:
+            code = HTTP.Request(player_url).content
+            DecryptSignature.cache[player_id] = parse_sig_js(code)
 
-        if len(t) == 1:
-            d = '%s%s' % (d, s[t[0]])
-        elif len(t) == 2:
-            d = '%s%s' % (d, s[t[0]:t[1]])
-        elif len(t) == 3:
-            d = '%s%s' % (d, s[t[0]:t[1]:t[2]])
-
-    return d
+        return DecryptSignature.cache[player_id](s)
+    except Exception:
+        Log.Error('Cannot decrypt signature')
+        return ''
 
 
 def ParseDuration(durationstr):
