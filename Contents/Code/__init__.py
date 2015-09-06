@@ -341,13 +341,13 @@ def Channels(oid, title, offset=None):
     )
 
     for item in res['items']:
-        oid = item['id']
+        cid = item['id']
         item = item['snippet']
 
         oc.add(DirectoryObject(
             key=Callback(
                 Channel,
-                oid=oid,
+                oid=cid,
                 title=item['title']
             ),
             title=u'%s' % item['title'],
