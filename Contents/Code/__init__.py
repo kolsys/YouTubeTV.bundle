@@ -259,7 +259,7 @@ def VideoInfo(vid, pl_item_id=None):
 
     item = res['items'][0]
 
-    oc.title2 = u'%s' % item['snippet']['title']
+    oc.title2 = u'%s' % item['snippet']['localized']['title']
 
     oc.add(DirectoryObject(
         key=Callback(
@@ -296,31 +296,10 @@ def VideoInfo(vid, pl_item_id=None):
             thumb=ICONS['remove'],
         ))
 
-    links = Video.ParseLinksFromDescription(item['snippet']['description'])
-    if len(links):
-        for (ext_title, url) in links:
-            try:
-                ext_vid = URLService.NormalizeURL(url)
-            except:
-                continue
-            if ext_vid is None:
-                continue
-
-            if 'playlist?' in ext_vid:
-                ext_vid = ext_vid[ext_vid.rfind('list=')+5:]
-                oc.add(DirectoryObject(
-                    key=Callback(Playlist, oid=ext_vid, title=ext_title),
-                    title=u'[*] %s' % ext_title
-                ))
-            else:
-                ext_vid = ext_vid[ext_vid.rfind('/')+1:]
-                oc.add(DirectoryObject(
-                    key=Callback(VideoInfo, vid=ext_vid),
-                    title=u'[*] %s' % ext_title,
-                    thumb='https://i.ytimg.com/vi/%s/hqdefault.jpg' % ext_vid
-                ))
-
-    return oc
+    return AddItemsFromDescription(
+        oc,
+        item['snippet']['localized']['description']
+    )
 
 
 @route(PREFIX + '/channels')
@@ -372,6 +351,7 @@ def Channels(oid, title, offset=None):
 
 @route(PREFIX + '/channel')
 def Channel(oid, title):
+
     oc = ObjectContainer(
         title2=u'%s' % title
     )
@@ -398,6 +378,21 @@ def Channel(oid, title):
     AddPlaylists(oc, uid=oid)
 
     return oc
+
+
+@route(PREFIX + '/user')
+def User(username):
+    res = ApiRequest('channels', ApiGetParams(
+        forUsername=username,
+        hl=GetLanguage()
+    ))
+
+    if not res or not len(res['items']):
+        return NoContents()
+
+    item = res['items'][0]
+
+    return Channel(item['id'], item['snippet']['localized']['title'])
 
 
 @route(PREFIX + '/categories')
@@ -736,6 +731,53 @@ def AddSubscriptions(oc, uid, offset=None):
 
     if not len(oc):
         return NoContents()
+
+    return oc
+
+
+def AddItemsFromDescription(oc, description):
+    links = Video.ParseLinksFromDescription(description)
+
+    if not len(links):
+        return oc;
+
+    for (ext_title, url) in links:
+        ext_title = ext_title.strip()
+
+        if '/user/' in url:
+            oc.add(DirectoryObject(
+                key=Callback(User, username=Video.GetOID(url)),
+                title=u'[*] %s' % ext_title,
+            ))
+            continue
+        elif '/channel/' in url:
+            oc.add(DirectoryObject(
+                key=Callback(Channel, oid=Video.GetOID(url), title=ext_title),
+                title=u'[*] %s' % ext_title,
+            ))
+            continue
+
+        try:
+            ext_vid = URLService.NormalizeURL(url)
+        except:
+            continue
+
+        if ext_vid is None:
+            continue
+
+        if 'playlist?' in ext_vid:
+            ext_vid = ext_vid[ext_vid.rfind('list=')+5:]
+            oc.add(DirectoryObject(
+                key=Callback(Playlist, oid=ext_vid, title=ext_title),
+                title=u'[*] %s' % ext_title
+            ))
+        else:
+            ext_vid = Video.GetOID(ext_vid)
+            oc.add(DirectoryObject(
+                key=Callback(VideoInfo, vid=ext_vid),
+                title=u'[*] %s' % ext_title,
+                thumb='https://i.ytimg.com/vi/%s/hqdefault.jpg' % ext_vid
+            ))
 
     return oc
 

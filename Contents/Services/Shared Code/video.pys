@@ -59,7 +59,7 @@ def GetServiceURL(vid, token='', hl=''):
 
 
 def GetMetaUrlByServiceURL(url):
-    return 'https://m.youtube.com/watch?ajax=1&v=%s' % url[url.rfind('/')+1:]
+    return 'https://m.youtube.com/watch?ajax=1&v=%s' % GetOID(url)
 
 
 def GetVideoData(url):
@@ -75,6 +75,10 @@ def GetVideoData(url):
         raise Ex.MediaNotAvailable
 
     return res
+
+
+def GetOID(url):
+    return url[url.rfind('/')+1:]
 
 
 def MetaFromInfo(item):
@@ -151,7 +155,7 @@ def ParseLinksFromDescription(text):
             r'^(.+)[\s\n]*(https?://(?:www\.|m\.)?youtu(?:be\.com|\.be)/'
             '(?!account(?:_|\?)?|artist(?:/|\?)|blog\?|categories\?|'
             'channels\?|charts|embed/(?:__videoid__|videoseries\?)|p/|'
-            'profile\?|channel/|results\?|subscribe_widget|\?tab=).+)'
+            'profile\?|results\?|subscribe_widget|\?tab=).+)'
         ),
         Regex.MULTILINE
     )
