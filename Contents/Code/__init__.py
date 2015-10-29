@@ -375,6 +375,16 @@ def Channel(oid, title):
         title=u'%s' % L('Subscriptions'),
         thumb=ICONS['subscriptions'],
     ))
+    oc.add(InputDirectoryObject(
+        key=Callback(
+            Search,
+            s_type='video',
+            channelId=oid,
+            title=u'%s' % L('Search Channel')
+        ),
+        title=u'%s' % L('Search'), prompt=u'%s' % L('Search Channel'),
+        thumb=ICONS['search']
+    ))
     AddPlaylists(oc, uid=oid)
 
     return oc
@@ -839,6 +849,7 @@ def Search(query=None, title=L('Search'), s_type='video', offset=0, **kwargs):
                 title=oc.title2,
                 s_type=s_type,
                 offset=res['nextPageToken'],
+                **kwargs
             ),
             title=u'%s' % L('Next page'),
             thumb=ICONS['next']
