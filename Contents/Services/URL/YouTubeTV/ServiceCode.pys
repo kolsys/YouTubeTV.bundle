@@ -125,29 +125,17 @@ def MetadataObjectForURL(url):
     if thumb[0] == '/':
         thumb = 'http:%s' % thumb
 
-    try:
-        summary = u'%s\n%s' % (
-            item['video']['public_name'],
-            item['video']['description']
-        )
-    except:
-        summary = u'%s\n%s' % (
-            Video.GetFromMainContent(item, 'short_byline_text'),
-            Video.GetFromMainContent(item, 'description'),
-        )
-
     return VideoClipObject(
         title=u'%s' % item['video']['title'],
         rating_key=url.split('&')[0],
-        summary=summary,
+        summary=u'%s  /  %s\n%s' % (
+            Video.GetFromMainContent(item, 'short_byline_text'),
+            Video.GetFromMainContent(item, 'date_text'),
+            Video.GetFromMainContent(item, 'description'),
+        ),
         thumb=thumb,
         rating=(float(meta['avg_rating'])*2),
         tags=meta['keywords'].split(','),
-        # TODO
-        # originally_available_at=Datetime.ParseDate(
-        #     item['video']['time_created_text'],
-        #     '%b %d, %Y'
-        # ).date(),
         duration=(item['video']['length_seconds']*1000) if item[
             'video'
         ]['length_seconds'] else None,
