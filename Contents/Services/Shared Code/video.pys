@@ -204,8 +204,8 @@ def DecryptSignature(s, player_url):
             DecryptSignature.cache[player_id] = parse_sig_js(code)
 
         return DecryptSignature.cache[player_id](s)
-    except Exception:
-        Log.Error('Cannot decrypt signature')
+    except Exception as e:
+        Log.Error('Cannot decrypt signature: %s' % e)
         return ''
 
 
