@@ -181,9 +181,10 @@ def MySubscriptions(offset=None):
         'ajax': 1,
     }
     if offset:
+        path = 'feed'
         params.update(JSON.ObjectFromString(offset))
-
-    path = 'feed' if offset else 'feed/subscriptions'
+    else:
+        path = 'feed/subscriptions'
 
     try:
         res = JSON.ObjectFromString(HTTP.Request(
@@ -206,14 +207,6 @@ def MySubscriptions(offset=None):
     if not 'contents' in res or not len(res['contents']):
         return NoContents()
 
-    if 'continuations' in res:
-        offset = JSON.StringFromObject({
-            'itct': res['continuations'][0]['click_tracking_params'],
-            'ctoken': res['continuations'][0]['continuation'],
-        })
-    else:
-        offset = None
-
     ids = []
     for item in res['contents']:
         ids.append(item['contents'][0]['content']['items'][0]['encrypted_id'])
@@ -225,15 +218,24 @@ def MySubscriptions(offset=None):
         extended=Prefs['my_subscriptions_extened']
     )
 
-    if offset:
-        oc.add(NextPageObject(
-            key=Callback(
-                MySubscriptions,
-                offset=offset,
-            ),
-            title=u'%s' % L('Next page'),
-            thumb=ICONS['next']
-        ))
+    if 'continuations' not in res:
+        return oc
+
+    # Add offset
+    for item in res['continuations']:
+        if item['item_type'] == 'next_continuation_data':
+            oc.add(NextPageObject(
+                key=Callback(
+                    MySubscriptions,
+                    offset=JSON.StringFromObject({
+                        'itct': item['click_tracking_params'],
+                        'ctoken': item['continuation'],
+                    }),
+                ),
+                title=u'%s' % L('Next page'),
+                thumb=ICONS['next']
+            ))
+            break
 
     return oc
 
