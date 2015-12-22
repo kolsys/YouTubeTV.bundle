@@ -46,23 +46,23 @@ YT_SCOPE = 'https://www.googleapis.com/auth/youtube'
 YT_VERSION = 'v3'
 
 ICONS = {
-    'likes': R('q_ic_drawer_likes_playlist_normal.png'),
-    'favorites': R('q_ic_drawer_favorites_normal.png'),
-    'uploads': R('q_ic_drawer_uploads_normal.png'),
-    'watchHistory': R('q_ic_drawer_watch_history_normal.png'),
-    'watchLater': R('q_ic_drawer_watch_later_normal.png'),
-    'subscriptions': R('q_ic_drawer_subscriptions_normal.png'),
-    'browseChannels': R('q_ic_drawer_browse_channels_normal.png'),
-    'playlists': R('q_ic_drawer_playlists_normal.png'),
-    'whatToWhatch': R('q_ic_drawer_what_to_watch_normal.png'),
-    'account': R('ic_account_switcher_sign_in.png'),
-    'categories': R('q_ic_drawer_mix_normal.png'),
-    'options': R('api_ic_options.png'),
-    'suggestions': R('ic_edit_suggestion.png'),
-    'remove': R('ic_offline_dialog_remove.png'),
-    'next': R('q_ic_drawer_expand_normal.png'),
-    'offline': R('ic_offline_disabled.png'),
-    'search': R('ic_search.png'),
+    'likes': R('heart-full.png'),
+    'favorites': R('star-2.png'),
+    'uploads': R('outbox-2.png'),
+    'watchHistory': R('revert.png'),
+    'watchLater': R('clock.png'),
+    'subscriptions': R('podcast-2.png'),
+    'browseChannels': R('grid-2.png'),
+    'playlists': R('list.png'),
+    'whatToWhatch': R('home.png'),
+    'account': R('user-2.png'),
+    'categories': R('store.png'),
+    'options': R('settings.png'),
+    'suggestions': R('tag.png'),
+    'remove': R('bin.png'),
+    'next': R('arrow-right.png'),
+    'offline': R('power.png'),
+    'search': R('search.png'),
 }
 
 YT_EDITABLE = {
@@ -109,7 +109,6 @@ def ValidatePrefs():
 
 @handler(PREFIX, TITLE, thumb=ICON)
 def MainMenu(complete=False, offline=False):
-
     oc = ObjectContainer(title2=TITLE, no_cache=True, replace_parent=False)
     if offline:
         ResetToken()
@@ -157,7 +156,7 @@ def MainMenu(complete=False, offline=False):
         title=u'%s' % L('My channel'),
         thumb=ICONS['account'],
     ))
-    AddSystemPlaylists(oc, 'me', ('watchLater', 'watchHistory', 'likes'))
+    FillChannelInfo(oc, 'me', ('watchLater', 'watchHistory', 'likes'))
     oc.add(InputDirectoryObject(
         key=Callback(
             Search,
@@ -250,7 +249,6 @@ def VideoView(vid):
 
 @route(PREFIX + '/video/info')
 def VideoInfo(vid, pl_item_id=None):
-
     oc = ObjectContainer()
     res = ApiGetVideos(ids=[vid])
 
@@ -353,13 +351,12 @@ def Channels(oid, title, offset=None):
 
 @route(PREFIX + '/channel')
 def Channel(oid, title):
-
     oc = ObjectContainer(
         title2=u'%s' % title
     )
 
     # Add standart menu
-    AddSystemPlaylists(oc, oid)
+    FillChannelInfo(oc, oid)
     if oid == 'me':
         oc.add(DirectoryObject(
             key=Callback(MainMenu, offline=True),
@@ -489,7 +486,7 @@ def Playlists(uid, title, offset=None):
     )
 
     if not offset and uid == 'me':
-        AddSystemPlaylists(oc, uid, ('watchLater', 'likes', 'favorites'))
+        FillChannelInfo(oc, uid, ('watchLater', 'likes', 'favorites'))
         oc.add(InputDirectoryObject(
             key=Callback(
                 Search,
@@ -555,7 +552,7 @@ def Playlist(oid, title, can_edit=False, offset=None):
 @route(PREFIX + '/playlist/add')
 def PlaylistAdd(aid, key=None, oid=None, a_type='video'):
     if key is not None:
-        items = ApiGetSystemPlayLists('me')
+        items = ApiGetChannelInfo('me')['playlists']
         if key in items:
             oid = items[key]
 
@@ -633,34 +630,42 @@ def AddVideos(oc, res, title=None, extended=False, pl_map={}):
     return oc
 
 
-def AddSystemPlaylists(oc, uid, types=None):
+def FillChannelInfo(oc, uid, pl_types=None):
+    info = ApiGetChannelInfo(uid)
 
-    items = ApiGetSystemPlayLists(uid)
+    if info['banner'] is not None:
+        oc.art = info['banner']
 
-    if items:
-        if types is not None:
-            items = dict(filter(lambda v: v[0] in types, items.items()))
+    if not info['playlists']:
+        return oc
 
-        for key in sorted(
-            items,
-            key=lambda v: v != 'uploads'
-        ):
-            oc.add(DirectoryObject(
-                key=Callback(
-                    Playlist,
-                    oid=items[key],
-                    title=L(key),
-                    can_edit=uid == 'me' and key in YT_EDITABLE
-                ),
-                title=u'%s' % L(key),
-                thumb=ICONS[key] if key in ICONS else None,
-            ))
+    if pl_types is not None:
+        items = dict(filter(
+            lambda v: v[0] in pl_types,
+            info['playlists'].items()
+        ))
+    else:
+        items = info['playlists']
+
+    for key in sorted(
+        items,
+        key=lambda v: v != 'uploads'
+    ):
+        oc.add(DirectoryObject(
+            key=Callback(
+                Playlist,
+                oid=items[key],
+                title=L(key),
+                can_edit=uid == 'me' and key in YT_EDITABLE
+            ),
+            title=u'%s' % L(key),
+            thumb=ICONS[key] if key in ICONS else None,
+        ))
 
     return oc
 
 
 def AddPlaylists(oc, uid, offset=None):
-
     res = ApiRequest('playlists', ApiGetParams(
         uid=uid,
         limit=GetLimitForOC(oc),
@@ -705,7 +710,6 @@ def AddPlaylists(oc, uid, offset=None):
 
 
 def AddSubscriptions(oc, uid, offset=None):
-
     res = ApiRequest('subscriptions', ApiGetParams(
         uid=uid,
         limit=GetLimitForOC(oc),
@@ -795,7 +799,6 @@ def AddItemsFromDescription(oc, description):
 
 
 def Search(query=None, title=L('Search'), s_type='video', offset=0, **kwargs):
-
     if not query and not kwargs:
         return NoContents()
 
@@ -862,7 +865,6 @@ def Search(query=None, title=L('Search'), s_type='video', offset=0, **kwargs):
 
 @route(PREFIX + '/authorization')
 def Authorization():
-
     code = None
     if CheckAccessData('device_code'):
         code = Dict['user_code']
@@ -961,18 +963,29 @@ def ApiGetVideos(ids=[], title=None, extended=False, **kwargs):
     ))
 
 
-def ApiGetSystemPlayLists(uid):
+def ApiGetChannelInfo(uid):
     res = ApiRequest('channels', ApiGetParams(
-        part='contentDetails',
+        part='contentDetails,brandingSettings',
         hl=GetLanguage(),
         uid=uid,
         id=uid if uid != 'me' else None
     ))
 
-    if res and res['items']:
-        return res['items'][0]['contentDetails']['relatedPlaylists']
+    ret = {
+        'playlists': {},
+        'banner': None
+    }
 
-    return {}
+    if res and res['items']:
+        res = res['items'][0]
+        Log.Debug(res)
+        ret['playlists'] = res['contentDetails']['relatedPlaylists']
+        try:
+            ret['banner'] = res['brandingSettings']['image']['bannerTvHighImageUrl']
+        except:
+            pass
+
+    return ret
 
 
 def ApiRequest(method, params, data=None, rmethod=None):
@@ -1035,7 +1048,6 @@ def ApiGetParams(part='snippet', offset=None, limit=None, uid=None, **kwargs):
 
 
 def CheckToken():
-
     if CheckAccessData('access_token'):
         return True
 

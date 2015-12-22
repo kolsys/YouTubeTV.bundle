@@ -49,7 +49,6 @@ class Updater:
     update = None
 
     def __init__(self, prefix, oc):
-
         if self.InitBundleInfo() and self.IsUpdateAvailable():
             Route.Connect(prefix, self.DoUpdate)
             oc.add(DirectoryObject(
@@ -69,7 +68,6 @@ class Updater:
         return version
 
     def ParseVersion(self, version):
-
         try:
             return tuple(map(int, (version.split('.'))))
         except:

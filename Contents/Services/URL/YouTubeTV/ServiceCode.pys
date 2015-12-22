@@ -143,7 +143,6 @@ def MetadataObjectForURL(url):
 
 
 def MediaObjectsForURL(url, definition='hd'):
-
     definitions = Video.DEFINITIONS[definition]
     if Prefs['play_highest']:
         definitions = (Video.MAX_RESOLUTION,)
