@@ -240,7 +240,7 @@ def MySubscriptions(offset=None):
 
 
 @route(PREFIX + '/video/view')
-def VideoView(vid):
+def VideoView(vid, **kwargs):
     return URLService.MetadataObjectForURL(
         url=Video.GetServiceURL(vid, Dict['access_token'], GetLanguage()),
         in_container=True
