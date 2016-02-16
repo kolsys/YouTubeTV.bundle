@@ -121,24 +121,24 @@ def MetadataObjectForURL(url):
     if not meta:
         raise Ex.MediaNotAvailable
 
-    thumb = item['video']['thumbnail_for_watch']
+    thumb = meta['iurl']
     if thumb[0] == '/':
         thumb = 'http:%s' % thumb
 
     return VideoClipObject(
-        title=u'%s' % item['video']['title'],
+        title=u'%s' % meta['title'],
         rating_key=url.split('&')[0],
-        summary=u'%s  /  %s\n%s' % (
-            Video.GetFromMainContent(item, 'short_byline_text'),
-            Video.GetFromMainContent(item, 'date_text'),
-            Video.GetFromMainContent(item, 'description'),
+        summary=u'%s\n%s' % (
+            meta['author'],
+            item['description'] if 'description' in item else '',
         ),
         thumb=thumb,
         rating=(float(meta['avg_rating'])*2),
         tags=meta['keywords'].split(','),
-        duration=(item['video']['length_seconds']*1000) if item[
-            'video'
-        ]['length_seconds'] else None,
+        duration=int(meta['length_seconds'])*1000 if meta['length_seconds'] else None,
+        originally_available_at=Datetime.ParseDate(
+            item['date_published']
+        ) if 'date_published' in item else None,
     )
 
 
@@ -167,8 +167,14 @@ def PlayVideo(url, fmt):
 
     fmt = int(fmt)
     if fmt not in info:
-        fmt = sorted(info, key=lambda k: Video.RESOLUTIONS[k], reverse=True)[0]
         Log.Debug('Get default format')
+        for fmt, v in sorted(
+            Video.RESOLUTIONS.items(),
+            lambda x,y: cmp(x[1], y[1]),
+            reverse=True
+        ):
+            if fmt in info:
+                break
 
     Log.Debug('Play itag: %d' % fmt)
 

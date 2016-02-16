@@ -37,6 +37,20 @@ RESOLUTIONS = {
     22: 720,
     18: 360,
     36: 240,
+    160: 144,
+    133: 240,
+    134: 360,
+    135: 480,
+    136: 720,
+    298: 720.60,
+    137: 1080,
+    299: 1080.60,
+}
+
+AUDIO = {
+    141: 256,
+    140: 128,
+    139: 48,
 }
 
 MAX_RESOLUTION = 22
@@ -59,22 +73,38 @@ def GetServiceURL(vid, token='', hl=''):
 
 
 def GetMetaUrlByServiceURL(url):
-    return 'https://m.youtube.com/watch?ajax=1&v=%s' % GetOID(url)
+    return 'https://www.youtube.com/watch?v=%s&spf=navigate' % GetOID(url)
 
 
 def GetVideoData(url):
     try:
-        res = JSON.ObjectFromString(HTTP.Request(
-            GetMetaUrlByServiceURL(url),
-            headers={
-                'User-Agent': USER_AGENT
-            }
-        ).content[4:])['content']
-
+        res = JSON.ObjectFromURL(GetMetaUrlByServiceURL(url))
     except:
         raise Ex.MediaNotAvailable
 
-    return res
+    ret = {}
+    for item in res:
+        if 'data' in item and 'swfcfg' in item['data']:
+            ret.update(item['data'])
+        elif 'body' in item and 'watch7-container' in item['body']:
+            try:
+                cont = HTML.ElementFromString(item['body']['watch7-container'])
+                ret['date_published'] = cont.xpath(
+                    '//meta[@itemprop="datePublished"]'
+                )[0].get('content')
+                cont = cont.xpath(
+                    '//div[@id="watch-description-text"]'
+                )[0]
+                for br in cont.xpath('*//br'):
+                    br.tail = '\n' + br.tail if br.tail else '\n'
+                ret['description'] = cont.text_content()
+            except:
+                pass
+
+    if ret:
+        return ret
+
+    raise Ex.MediaNotAvailable
 
 
 def GetOID(url):
@@ -128,13 +158,17 @@ def GetVideoUrls(url):
 
     # Normal video
     elif 'url_encoded_fmt_stream_map' in meta:
-
-        for item in meta['url_encoded_fmt_stream_map'].split(','):
+        # High definition
+        key = 'adaptive_fmts' if 'adaptive_fmts' in meta else 'url_encoded_fmt_stream_map'
+        for item in meta[key].split(','):
             item = dict(map(
                 lambda x: (x[0], x[1][0]),
                 String.ParseQueryString(item).items()
             ))
-            ret[int(item['itag'])] = GetUrlFromStream(item, player_url)
+            itag = int(item['itag'])
+            if itag in RESOLUTIONS or itag in AUDIO:
+                ret[itag] = GetUrlFromStream(item, player_url)
+
     # Fresh uploaded video
     else:
         try:

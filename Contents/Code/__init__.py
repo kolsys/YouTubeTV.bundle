@@ -978,7 +978,6 @@ def ApiGetChannelInfo(uid):
 
     if res and res['items']:
         res = res['items'][0]
-        Log.Debug(res)
         ret['playlists'] = res['contentDetails']['relatedPlaylists']
         try:
             ret['banner'] = res['brandingSettings']['image']['bannerTvHighImageUrl']
