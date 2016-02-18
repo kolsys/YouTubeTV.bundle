@@ -159,7 +159,10 @@ def GetVideoUrls(url):
     # Normal video
     elif 'url_encoded_fmt_stream_map' in meta:
         # High definition
-        key = 'adaptive_fmts' if 'adaptive_fmts' in meta else 'url_encoded_fmt_stream_map'
+        key = 'url_encoded_fmt_stream_map'
+        if 'adaptive_fmts' and IsAdaptiveSupport():
+            key = 'adaptive_fmts'
+
         for item in meta[key].split(','):
             item = dict(map(
                 lambda x: (x[0], x[1][0]),
@@ -204,12 +207,8 @@ def GetUrlFromStream(item, player_url):
     return ret
 
 
-def GetFromMainContent(item, key):
-    try:
-        cont = item['video_main_content']['contents'][0]
-        return cont[key]['runs'][0]['text']
-    except:
-        return ''
+def IsAdaptiveSupport():
+    return False
 
 
 def DecryptSignature(s, player_url):
