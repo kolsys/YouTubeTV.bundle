@@ -61,6 +61,8 @@ USER_AGENT = (
     'Mobile/11B554a Safari/9537.54'
 )
 
+RE_DATA = Regex('ytplayer.config\s*=\s*({(?:.+)});\s*ytplayer.load\s*=')
+
 
 def GetServiceURL(vid, token='', hl=''):
     return 'http://tv.youtube.plugins.plex.com/%s%s%s%s%s' % (
@@ -73,38 +75,42 @@ def GetServiceURL(vid, token='', hl=''):
 
 
 def GetMetaUrlByServiceURL(url):
-    return 'https://www.youtube.com/watch?v=%s&spf=navigate' % GetOID(url)
+    return 'https://www.youtube.com/watch?v=%s' % GetOID(url)
 
 
 def GetVideoData(url):
     try:
-        res = JSON.ObjectFromURL(GetMetaUrlByServiceURL(url))
+        res = HTML.ElementFromURL(GetMetaUrlByServiceURL(url))
     except:
         raise Ex.MediaNotAvailable
 
     ret = {}
-    for item in res:
-        if 'data' in item and 'swfcfg' in item['data']:
-            ret.update(item['data'])
-        elif 'body' in item and 'watch7-container' in item['body']:
-            try:
-                cont = HTML.ElementFromString(item['body']['watch7-container'])
-                ret['date_published'] = cont.xpath(
-                    '//meta[@itemprop="datePublished"]'
-                )[0].get('content')
-                cont = cont.xpath(
-                    '//div[@id="watch-description-text"]'
-                )[0]
-                for br in cont.xpath('*//br'):
-                    br.tail = '\n' + br.tail if br.tail else '\n'
-                ret['description'] = cont.text_content()
-            except:
-                pass
 
-    if ret:
-        return ret
+    try:
+        ret = JSON.ObjectFromString(RE_DATA.search(
+            res.xpath(
+                '//script[contains(., "ytplayer.config")]'
+            )[0].text_content()
+        ).group(1))
+    except Exception as e:
+        Log.Error('Cannot get video data: %s' % e)
+        raise Ex.MediaNotAvailable
 
-    raise Ex.MediaNotAvailable
+    try:
+        cont = res.xpath('//div[@id="watch7-container"]')[0]
+        ret['date_published'] = cont.xpath(
+            '//meta[@itemprop="datePublished"]'
+        )[0].get('content')
+        cont = cont.xpath(
+            '//div[@id="watch-description-text"]'
+        )[0]
+        for br in cont.xpath('*//br'):
+            br.tail = '\n' + br.tail if br.tail else '\n'
+        ret['description'] = cont.text_content()
+    except:
+        pass
+
+    return ret
 
 
 def GetOID(url):
@@ -113,21 +119,16 @@ def GetOID(url):
 
 def MetaFromInfo(item):
     try:
-        meta = item['swfcfg']['args']
+        return item['args']
     except:
-        try:
-            meta = item['player_data']['player_vars']
-        except:
-            return None
-
-    return meta
+        return None
 
 
 def GetVideoUrls(url):
     info = GetVideoData(url)
     meta = MetaFromInfo(info)
     try:
-        player_url = info['swfcfg']['assets']['js']
+        player_url = info['assets']['js']
     except:
         player_url = None
 
@@ -171,14 +172,6 @@ def GetVideoUrls(url):
             itag = int(item['itag'])
             if itag in RESOLUTIONS or itag in AUDIO:
                 ret[itag] = GetUrlFromStream(item, player_url)
-
-    # Fresh uploaded video
-    else:
-        try:
-            for item in info['player_data']['fmt_stream_map']:
-                ret[int(item['itag'])] = GetUrlFromStream(item, player_url)
-        except:
-            pass
 
     if not len(ret):
         raise Ex.MediaNotAvailable

@@ -48,5 +48,7 @@
 	"Action complete": "Action terminée",
 	"An error has occurred": "Une erreur est survenue",
 	"Sign out": "Déconnexion",
-	"Subscriptions list sorting order": "Ordre de tri de la liste des abonnements"
+	"Subscriptions list sorting order": "Ordre de tri de la liste des abonnements",
+	"Always play highest quality": "Toujours utiliser la meilleurs qualité",
+	"Search Channel": "Rechercher dans les chaînes"
 }
