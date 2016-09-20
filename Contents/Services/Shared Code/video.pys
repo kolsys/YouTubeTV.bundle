@@ -124,6 +124,17 @@ def MetaFromInfo(item):
         return None
 
 
+def GetFeedVid(item):
+    if 'video_id' in item:
+        return item['video_id']
+    if 'encrypted_id' in item:
+        return item['encrypted_id']
+    if item['item_type'] == 'shelf':
+        return item['content']['items'][0]['encrypted_id']
+
+    return None
+
+
 def GetVideoUrls(url):
     info = GetVideoData(url)
     meta = MetaFromInfo(info)

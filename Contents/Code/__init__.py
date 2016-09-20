@@ -71,6 +71,12 @@ YT_EDITABLE = {
     'favorites': L('Add to favorites'),
 }
 
+YT_FEEDS = {
+    '_SB': {'u': 'feed/subscriptions', 'title': L('My Subscriptions')},
+    'HL': {'u': 'feed/history', 'title': L('watchHistory')},
+    'WL': {'u': 'playlist', 'title': L('watchLater')},
+}
+
 ###############################################################################
 # Init
 ###############################################################################
@@ -127,7 +133,7 @@ def MainMenu(complete=False, offline=False):
     Updater(PREFIX+'/update', oc)
 
     oc.add(DirectoryObject(
-        key=Callback(MySubscriptions),
+        key=Callback(Feed, oid='_SB'),
         title=u'%s' % L('My Subscriptions'),
         thumb=ICONS['subscriptions'],
     ))
@@ -170,8 +176,8 @@ def MainMenu(complete=False, offline=False):
     return AddSubscriptions(oc, uid='me')
 
 
-@route(PREFIX + '/my/subscriptions')
-def MySubscriptions(offset=None):
+@route(PREFIX + '/feed')
+def Feed(oid, offset=None):
     if not CheckToken():
         return NoContents()
 
@@ -179,11 +185,17 @@ def MySubscriptions(offset=None):
         'access_token': Dict['access_token'],
         'ajax': 1,
     }
+
     if offset:
         path = 'feed'
+        params['action_continuation'] = 1
         params.update(JSON.ObjectFromString(offset))
     else:
-        path = 'feed/subscriptions'
+        path = YT_FEEDS[oid]['u']
+
+    if YT_FEEDS[oid]['u'] == 'playlist':
+        params['list'] = oid
+        path = YT_FEEDS[oid]['u']
 
     try:
         res = JSON.ObjectFromString(HTTP.Request(
@@ -200,32 +212,59 @@ def MySubscriptions(offset=None):
             if 'selected' in item and item['selected'] is True:
                 res = item['content']
                 break
-    else:
+    elif 'section_list' in res and len(res['section_list']['contents']):
+        res = res['section_list']['contents'][0]
+    elif 'continuation_contents' in res:
         res = res['continuation_contents']
+    else:
+        return NoContents()
 
     if not 'contents' in res or not len(res['contents']):
         return NoContents()
 
     ids = []
+
+    if 'continuations' in res and len(res['continuations']):
+        continuations = res['continuations']
+    else:
+        continuations = None
+
     for item in res['contents']:
-        ids.append(item['contents'][0]['content']['items'][0]['encrypted_id'])
+        if 'continuations' in item and len(item['continuations']):
+            continuations = item['continuations']
 
-    oc = ObjectContainer(title2=L('My subscriptions'))
-    AddVideos(
+        vid = Video.GetFeedVid(item)
+        if vid is not None:
+            ids.append(vid)
+            continue
+
+        for subitem in item['contents']:
+            vid = Video.GetFeedVid(subitem)
+            if vid is not None:
+                ids.append(vid)
+
+    if not len(ids):
+        return NoContents()
+
+    oc = ObjectContainer(title2=u'%s' % YT_FEEDS[oid]['title'])
+    chunk_size = 50
+    extended = Prefs['my_subscriptions_extened'] if oid == '_SB' else Prefs['playlists_extened']
+    [AddVideos(
         oc,
-        ApiGetVideos(ids=ids),
-        extended=Prefs['my_subscriptions_extened']
-    )
+        ApiGetVideos(ids=ids[i:i + chunk_size]),
+        extended=extended
+    ) for i in xrange(0, len(ids), chunk_size)]
 
-    if 'continuations' not in res:
+    if continuations is None:
         return oc
 
     # Add offset
-    for item in res['continuations']:
+    for item in continuations:
         if item['item_type'] == 'next_continuation_data':
             oc.add(NextPageObject(
                 key=Callback(
-                    MySubscriptions,
+                    Feed,
+                    oid=oid,
                     offset=JSON.StringFromObject({
                         'itct': item['click_tracking_params'],
                         'ctoken': item['continuation'],
@@ -502,6 +541,10 @@ def Playlists(uid, title, offset=None):
 
 @route(PREFIX + '/playlist')
 def Playlist(oid, title, can_edit=False, offset=None):
+
+    if oid in YT_FEEDS:
+        return Feed(oid)
+
     res = ApiRequest('playlistItems', ApiGetParams(
         part='contentDetails',
         playlistId=oid,
