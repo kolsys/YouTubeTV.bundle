@@ -121,6 +121,8 @@ def MetadataObjectForURL(url):
     if not meta:
         raise Ex.MediaNotAvailable
 
+    Log.Debug(meta)
+
     thumb = meta['iurl']
     if thumb[0] == '/':
         thumb = 'http:%s' % thumb
