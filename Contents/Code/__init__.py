@@ -835,7 +835,7 @@ def AddItemsFromDescription(oc, description):
             oc.add(DirectoryObject(
                 key=Callback(VideoInfo, vid=ext_vid),
                 title=u'[*] %s' % ext_title,
-                thumb='https://i.ytimg.com/vi/%s/hqdefault.jpg' % ext_vid
+                thumb=Video.GetThumb(ext_vid)
             ))
 
     return oc

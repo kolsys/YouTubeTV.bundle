@@ -78,6 +78,10 @@ def GetMetaUrlByServiceURL(url):
     return 'https://www.youtube.com/watch?v=%s' % GetOID(url)
 
 
+def GetThumb(vid):
+    return 'https://i.ytimg.com/vi/%s/hqdefault.jpg' % vid
+
+
 def GetVideoData(url):
     try:
         res = HTML.ElementFromURL(GetMetaUrlByServiceURL(url))

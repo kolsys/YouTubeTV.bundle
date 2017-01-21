@@ -121,10 +121,6 @@ def MetadataObjectForURL(url):
     if not meta:
         raise Ex.MediaNotAvailable
 
-    thumb = meta['iurl']
-    if thumb[0] == '/':
-        thumb = 'http:%s' % thumb
-
     return VideoClipObject(
         title=u'%s' % meta['title'],
         rating_key=url.split('&')[0],
@@ -132,7 +128,7 @@ def MetadataObjectForURL(url):
             meta['author'],
             item['description'] if 'description' in item else '',
         ),
-        thumb=thumb,
+        thumb=Video.GetThumb(meta['video_id']),
         rating=(float(meta['avg_rating'])*2),
         tags=meta['keywords'].split(','),
         duration=int(meta['length_seconds'])*1000 if meta['length_seconds'] else None,
