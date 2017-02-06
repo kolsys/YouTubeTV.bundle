@@ -231,13 +231,16 @@ def DecryptSignature(s, player_url):
         return '.'.join(str(len(part)) for part in example_sig.split('.'))
 
     def parse_sig_js(jscode):
-        funcname = Regex('\.sig\|\|([a-zA-Z0-9$]+)\(').search(jscode).group(1)
+        funcname = Regex('(?:\.sig\|\||\.set\("signature",)([a-zA-Z0-9$]+)\(').search(jscode).group(1)
         jsi = JSInterpreter(jscode)
         initial_function = jsi.extract_function(funcname)
         return lambda s: initial_function([s])
 
     if player_url.startswith('//'):
         player_url = 'https:' + player_url
+    elif player_url.startswith('/'):
+        player_url = 'https://www.youtube.com' + player_url
+
     try:
         player_id = (player_url, signature_cache_id(s))
         if player_id not in DecryptSignature.cache:
