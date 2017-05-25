@@ -213,7 +213,19 @@ def Feed(oid, offset=None):
                 res = item['content']
                 break
     elif 'section_list' in res and len(res['section_list']['contents']):
-        res = res['section_list']['contents'][0]
+        for item in res['section_list']['contents']:
+            if item['item_type'] == 'playlist_video_list':
+                res = item
+                break
+            elif 'contents' in item:
+                for subitem in item['contents']:
+                    if subitem['item_type'] == 'playlist_video_list':
+                        res = subitem
+                        break
+                else:
+                    continue
+                break
+
     elif 'continuation_contents' in res:
         res = res['continuation_contents']
     else:
