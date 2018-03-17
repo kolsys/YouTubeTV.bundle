@@ -231,7 +231,13 @@ def DecryptSignature(s, player_url):
         return '.'.join(str(len(part)) for part in example_sig.split('.'))
 
     def parse_sig_js(jscode):
-        funcname = Regex('(?:\.sig\|\||\.set\("signature",)([a-zA-Z0-9$]+)\(').search(jscode).group(1)
+        funcname = Regex((
+            '(?:' +
+            '\.sig\|\||' +
+            '\.set\("signature",|' +
+            '\|\|\(\w\w?="signature"\),\w\w?.set\(\w\w?,' +
+            ')([a-zA-Z0-9$]+)\('
+        )).search(jscode).group(1)
         jsi = JSInterpreter(jscode)
         initial_function = jsi.extract_function(funcname)
         return lambda s: initial_function([s])

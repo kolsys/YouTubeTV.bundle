@@ -14,10 +14,10 @@
 	<key>CFBundleSignature</key>
 	<string>hook</string>
 	<key>CFBundleVersion</key>
-	<string>4.7</string>
+	<string>4.8</string>
 
 	<key>PlexPluginVersionUrl</key>
-	<string>http://bit.ly/1FuE3dz</string>
+	<string>https://go.kolsys.cf/1FuE3dz</string>
 	<key>PlexPluginCodePolicy</key>
 	<string>Elevated</string>
 
