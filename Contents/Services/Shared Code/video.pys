@@ -231,6 +231,7 @@ def DecryptSignature(s, player_url):
         return '.'.join(str(len(part)) for part in example_sig.split('.'))
 
     def parse_sig_js(jscode):
+        # These regexes are pulled from the youtube-dl source. Credit to rg3
         sig_regexes = (r'(["\'])signature\1\s*,\s*(?P<sig>[a-zA-Z0-9$]+)\(',
                        r'\.sig\|\|(?P<sig>[a-zA-Z0-9$]+)\(',
                        r'yt\.akamaized\.net/\)\s*\|\|\s*.*?\s*c\s*&&\s*d\.set\([^,]+\s*,\s*(?P<sig>[a-zA-Z0-9$]+)\(',
