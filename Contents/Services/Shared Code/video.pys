@@ -219,34 +219,46 @@ def IsAdaptiveSupport():
     return False
 
 
-def DecryptSignature(s, player_url, age_gate=False):
-  """Turn the encrypted s field into a working signature (copied from master Services.bundle)"""
+def DecryptSignature(s, player_url):
+    """Turn the encrypted s field into a working signature"""
 
-  key = '-'.join([str(len(p)) for p in s.split('.')])
-  r = int(Datetime.TimestampFromDatetime(Datetime.Now()))/100
+    try:  # hasattr workaround
+        len(DecryptSignature.cache)
+    except:
+        DecryptSignature.cache = {}
 
-  json_obj = JSON.ObjectFromURL('http://6bcff61fb860029015c6-b0c40228a7b02641ddb14594625d1e51.r77.cf3.rackcdn.com/y.json?%d' % (r), cacheTime=60, headers={'Accept-Encoding': 'identity'})
+    def signature_cache_id(example_sig):
+        return '.'.join(str(len(part)) for part in example_sig.split('.'))
 
-  if key not in json_obj:
-    Log('Unable to decrypt signature, key %s not available' % (key))
-    raise Ex.MediaNotAvailable
+    def parse_sig_js(jscode):
+        sig_regexes = (r'(["\'])signature\1\s*,\s*(?P<sig>[a-zA-Z0-9$]+)\(',
+                       r'\.sig\|\|(?P<sig>[a-zA-Z0-9$]+)\(',
+                       r'yt\.akamaized\.net/\)\s*\|\|\s*.*?\s*c\s*&&\s*d\.set\([^,]+\s*,\s*(?P<sig>[a-zA-Z0-9$]+)\(',
+                       r'\bc\s*&&\s*d\.set\([^,]+\s*,\s*(?P<sig>[a-zA-Z0-9$]+)\(')
+        searches = [Regex(rx).search(jscode) for rx in sig_regexes]
+        for search in searches:
+            if not search is None:
+                funcname = search.group('sig')
+                break
+        jsi = JSInterpreter(jscode)
+        initial_function = jsi.extract_function(funcname)
+        return lambda s: initial_function([s])
 
-  d = ''
+    if player_url.startswith('//'):
+        player_url = 'https:' + player_url
+    elif player_url.startswith('/'):
+        player_url = 'https://www.youtube.com' + player_url
 
-  for p in json_obj[key]:
-    t = []
+    try:
+        player_id = (player_url, signature_cache_id(s))
+        if player_id not in DecryptSignature.cache:
+            code = HTTP.Request(player_url).content
+            DecryptSignature.cache[player_id] = parse_sig_js(code)
 
-    for x in p.split(':'):
-      t.append(int(x) if x != "" else None)
-
-    if len(t) == 1:
-      d = '%s%s' % (d, s[t[0]])
-    elif len(t) == 2:
-      d = '%s%s' % (d, s[t[0]:t[1]])
-    elif len(t) == 3:
-      d = '%s%s' % (d, s[t[0]:t[1]:t[2]])
-
-  return d
+        return DecryptSignature.cache[player_id](s)
+    except Exception as e:
+        Log.Error('Cannot decrypt signature: %s' % e)
+        return ''
 
 
 def ParseDuration(durationstr):
