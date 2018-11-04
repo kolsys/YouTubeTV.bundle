@@ -130,7 +130,7 @@ def MetadataObjectForURL(url):
         ),
         thumb=Video.GetThumb(meta['video_id']),
         rating=(float(meta['avg_rating'])*2),
-        tags=meta['keywords'].split(','),
+        tags=(item['keywords'] if 'keywords' in item else '').split(','),
         duration=int(meta['length_seconds'])*1000 if meta['length_seconds'] else None,
         originally_available_at=Datetime.ParseDate(
             item['date_published']
