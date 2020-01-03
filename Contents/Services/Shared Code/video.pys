@@ -188,6 +188,16 @@ def GetVideoUrls(url):
             if itag in RESOLUTIONS or itag in AUDIO:
                 ret[itag] = GetUrlFromStream(item, player_url)
 
+    elif 'player_response' in meta:
+        player_response = JSON.ObjectFromString(meta['player_response'])
+        if 'streamingData' in player_response:
+            streaming_data = player_response['streamingData']
+            if 'formats' in streaming_data:
+                for item in streaming_data['formats']:
+                    itag = item['itag']
+                    if itag in RESOLUTIONS or itag in AUDIO:
+                        ret[itag] = item['url']
+
     if not len(ret):
         raise Ex.MediaNotAvailable
 
