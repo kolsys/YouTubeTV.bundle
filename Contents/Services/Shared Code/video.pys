@@ -196,7 +196,7 @@ def GetVideoUrls(url):
                 for item in streaming_data['formats']:
                     itag = item['itag']
                     if itag in RESOLUTIONS or itag in AUDIO:
-                        ret[itag] = item['url']
+                        ret[itag] = GetUrlFromStream(item, player_url)
 
     if not len(ret):
         raise Ex.MediaNotAvailable
