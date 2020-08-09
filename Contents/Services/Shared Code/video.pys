@@ -61,7 +61,7 @@ USER_AGENT = (
     'Mobile/11B554a Safari/9537.54'
 )
 
-RE_DATA = Regex('ytplayer.config\s*=\s*({(?:.+)});\s*ytplayer.load\s*=')
+RE_DATA = Regex('ytplayer.config\s*=\s*({(?:.+)});\s*(?:ytplayer.web_player_context_config|ytplayer.load)\s*=')
 
 
 def GetServiceURL(vid, token='', hl=''):
